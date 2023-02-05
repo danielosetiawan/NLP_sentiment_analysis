@@ -1,3 +1,5 @@
 DS_Store
 .ipynb_checkpoints/
 tweets_numericalized.csv
+large_datafiles
+tweets_cleaned_tokenized_words.csv
