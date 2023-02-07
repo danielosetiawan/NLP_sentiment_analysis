@@ -3,3 +3,6 @@ large_datafiles
 tweets_cleaned_tokenized_words.csv
 tweets_numericalized.csv
 StockTwits_cleaned.csv
+untokenized_df.csv
+padded_X.csv
+padded_y.csv
