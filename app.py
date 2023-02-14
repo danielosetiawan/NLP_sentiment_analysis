@@ -7,10 +7,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from dash import Dash, dcc, html, dash_table, Input, Output, callback
+from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly import tools
 import dash_bootstrap_components as dbc
+from sentiment_prediction import checkSenti
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 
 df = px.data.gapminder()
@@ -37,10 +39,6 @@ df['ticker'] = df['raw_content'].str.upper().str.extract(r'\$(\w+)')
 # extract date only
 df['Date'] = df['created_at'].dt.date
 
-# get average sentiment per day
-df = df.groupby(['ticker', 'Date']).agg({'sentiment': 'mean'}).reset_index()
-df['Date'] = pd.to_datetime(df['Date'])
-
 def clean_tickers(ticker):
     if 'AAPL' in ticker:
         ticker = 'AAPL'
@@ -55,18 +53,24 @@ def clean_tickers(ticker):
 
 df['ticker'] = df['ticker'].apply(lambda x: clean_tickers(x))
 
+# get average sentiment per day
+df = df.groupby(['ticker', 'Date']).agg({'sentiment': 'mean'}).reset_index()
+df['Date'] = pd.to_datetime(df['Date'])
+
 for tick in df['ticker'].unique():
     df1 = df[df['ticker'] == tick]
     df2 = stocks_df[stocks_df['Stock Name'] == tick]
     
     globals()[tick] = pd.merge(df1, df2, on='Date').iloc[:, 1:]
+    globals()[tick]['color'] = globals()[tick]['sentiment'].apply(lambda x: 'green' if x > 0.5 else 'red')
+    globals()[tick]['label'] = globals()[tick]['sentiment'].apply(lambda x: 'Bullish' if x > 0.5 else 'Bearish')
 
 # stylesheet with the .dbc class
 dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.min.css"
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP, dbc_css])
+app = Dash(__name__, external_stylesheets=[dbc.themes.LUX, dbc_css])
 
 header = html.H4(
-    "Sentimentsdfsdf NLP", className="bg-primary text-white p-2 mb-2 text-center"
+    "Sentiments NLP", className="bg-primary text-white p-2 mb-2 text-center"
 )
 
 table = html.Div(
@@ -100,7 +104,7 @@ dropdown = html.Div(
 
 checklist = html.Div(
     [
-        dbc.Label("Select Continents"),
+        dbc.Label("Select Analysis"),
         dbc.Checklist(
             id="analysis",
             options=stocks_df.columns,
@@ -149,13 +153,21 @@ controls = dbc.Card(
     body=True,
 )
 
-tab1 = dbc.Tab(label="Line Chart", children=[
+tab1 = dbc.Tab(label="Stocks", children=[
             dcc.Graph(id='line-chart'),
-            dcc.Graph(id='scatter-chart')
+            # dcc.Graph(id='scatter-chart')
             ])
-# tab2 = dbc.Tab([dcc.Graph(id="scatter-chart")], label="Scatter Chart")
+tab2 = dbc.Tab(html.Div([
+    dcc.Textarea(
+        id='sentiment-prediction-text',
+        value="Hell yeahhh ~ I'm feeling extra bullish today.\nLooks like them stock prices are shooting to the moon 😍",
+        style={'width': '100%', 'height': 200},
+    ),
+    html.Button('Classify Text', id='sentiment-prediction-button', n_clicks=0),
+    html.Div(id='sentiment-prediction-output', style={'whiteSpace': 'pre-line'})
+]), label="Sentiment Prediction")
 tab3 = dbc.Tab([table], label="Table", className="p-4")
-tabs = dbc.Card(dbc.Tabs([tab1, tab3]))
+tabs = dbc.Card(dbc.Tabs([tab1, tab2, tab3]))
 
 app.layout = dbc.Container(
     [
@@ -179,10 +191,22 @@ app.layout = dbc.Container(
     className="dbc",
 )
 
+@callback(
+    Output('sentiment-prediction-output', 'children'),
+    Input('sentiment-prediction-button', 'n_clicks'),
+    State('sentiment-prediction-text', 'value')
+)
+def update_output(n_clicks, value):
+    # if n_clicks > 0:
+    prediction = checkSenti(value)
+    color = 'success' if prediction[0] == 'Bullish' else 'danger'
+    value2 = f"Based on our models, this text is {round(prediction[1]*100, 2)}% likely to be "
+
+    return dbc.Alert([value2, html.B(prediction[0], className="alert-heading"), '.'], color=color),
 
 @callback(
     Output("line-chart", "figure"),
-    Output("scatter-chart", "figure"),
+    # Output("sentiment-prediction", "figure"),
     Output("table", "data"),
     Input("company", "value"),
     Input("analysis", "value"),
@@ -191,56 +215,58 @@ app.layout = dbc.Container(
 )
 
 def update_line_chart(company, analysis, yrs, theme):
-    if analysis == [] or company == 'All':
-        return {}, {}, []
-
-    dff = stocks_df[stocks_df.Date.dt.year.between(yrs[0], yrs[1])]
-    # dff = dff[dff.continent.isin(continent)]
-    data = dff.to_dict("records")
+    if analysis == [] or company is 'All':
+        return {}, []
 
     if company == 'All':
-        fig_data = stocks_df
+        # change this when you're done with testing
+        df = globals()['AAPL'][globals()['AAPL'].Date.dt.year.between(yrs[0], yrs[1])]
     else:
-        fig_data = stocks_df[stocks_df['Stock Name'] == company]
+        df = globals()[company][globals()[company].Date.dt.year.between(yrs[0], yrs[1])]
 
-    fig = px.line(
-        fig_data,
-        x='Date',
-        y='High',
-        # name = 'Original Price',
-        title = f'{company} Stock',
+    data = df.to_dict("records")
+
+    fig = tools.make_subplots(
+        rows=3, cols=1,
+        specs=[[{'rowspan': 2}],
+            [None],
+            [{'rowspan': 1}]],
+        vertical_spacing=0.05)
+
+    stock = go.Scatter(x=df['Date'], y=df['Adj Close'], name="Adj. Close")
+    MA30 = go.Scatter(x=df['Date'], y=df['High'].rolling(window=30).mean(), name="30 day MA")
+    MA50 = go.Scatter(x=df['Date'], y=df['High'].rolling(window=50).mean(), name="50 day MA")
+    sentiment = go.Bar(x=df['Date'], y=df['sentiment'], name="Sentiment", marker=dict(color=df['color'], line=dict(width=0)), showlegend=False)
+    
+    fig.append_trace(stock, row=1, col=1)
+    fig.append_trace(MA30, row=1, col=1)
+    fig.append_trace(MA50, row=1, col=1)
+    fig.append_trace(sentiment, row=3, col=1)
+
+    fig.update_yaxes(title_text='Stock Price', row=1, col=1)
+    fig.update_yaxes(title_text='Sentiment', row=3, col=1)
+    fig.update_yaxes(tickmode='array',
+                 tickvals=[0, 0.5, 1],
+                 row=3, col=1)
+
+    fig.layout.update(title=f'{company} Stock Price v. Sentiment',
+                     height=600, width=850, showlegend=True, hovermode='closest')
+
+    fig.update_layout(
         template=template_from_url(theme),
-    )
-
-    fig30 = fig_data['High'].rolling(window=30).mean()
-    fig50 = fig_data['High'].rolling(window=50).mean()
-    # maybe add a for loop here?
-    fig.add_trace(go.Scatter(x=fig_data['Date'], y=fig30, name='30 day MA'))
-    fig.add_trace(go.Scatter(x=fig_data['Date'], y=fig50, name='50 day MA'))
-
-
-    fig_scatter = px.line(
-        stocks_df,
-        x=stocks_df.index,
-        y='High',
-        height=300,
-        # color="continent",
-        # line_group="country",
-        template=template_from_url(theme),
-    )
-    # px.scatter(
-    #     df.query(f"year=={yrs[1]} & continent=={continent}"),
-    #     x="gdpPercap",
-    #     y="lifeExp",
-    #     size="pop",
-    #     color="continent",
-    #     log_x=True,
-    #     size_max=60,
-    #     template=template_from_url(theme),
-    #     title="Gapminder %s: %s theme" % (yrs[1], template_from_url(theme)),
-    # )
-
-    return fig, fig_scatter, data
+        hovermode='x unified', 
+        legend=dict(
+        x=0,
+        y=1.05,
+        traceorder="normal",
+        font=dict(
+            family="sans-serif",
+            size=12,
+            color="black"
+        )))
+    fig.update_traces(xaxis='x1')
+    
+    return fig, data
 
 
 if __name__ == "__main__":
