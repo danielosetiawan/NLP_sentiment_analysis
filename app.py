@@ -70,7 +70,7 @@ dbc_css = "https://cdn.jsdelivr.net/gh/AnnMarieW/dash-bootstrap-templates/dbc.mi
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX, dbc_css])
 
 header = html.H4(
-    "Sentiments NLP", className="bg-primary text-white p-2 mb-2 text-center"
+    "Sentimentsdklfjsklfjs NLP", className="bg-primary text-white p-2 mb-2 text-center"
 )
 
 table = html.Div(
