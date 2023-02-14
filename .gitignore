@@ -7,3 +7,4 @@ balanced_tokenized_cleaned_stocktwits.csv
 unbalanced_tokenized_cleaned_stocktwits.csv
 balanced_untokenized_cleaned_stocktwits.csv
 data
+__pycache__

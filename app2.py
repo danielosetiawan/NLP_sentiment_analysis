@@ -1,26 +1,14 @@
-from dash import Dash, dcc, html
-from dash.dependencies import Input, Output, State
+import dash
+import dash_bootstrap_components as dbc
+from dash import html
 
-app = Dash(__name__)
+app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-app.layout = html.Div([
-    dcc.Textarea(
-        id='textarea-state-example',
-        value='Textarea content initialized\nwith multiple lines of text',
-        style={'width': '100%', 'height': 200},
-    ),
-    html.Button('Submit', id='textarea-state-example-button', n_clicks=0),
-    html.Div(id='textarea-state-example-output', style={'whiteSpace': 'pre-line'})
-])
-
-@app.callback(
-    Output('textarea-state-example-output', 'children'),
-    Input('textarea-state-example-button', 'n_clicks'),
-    State('textarea-state-example', 'value')
+header = html.H4(
+    "Sentiments NLP", className="bg-primary text-white p-2 mb-2 text-center"
 )
-def update_output(n_clicks, value):
-    if n_clicks > 0:
-        return 'You have entered: \n{}'.format(value)
 
-if __name__ == '__main__':
+header
+
+if __name__ == "__main__":
     app.run_server(debug=True, port=8051)
