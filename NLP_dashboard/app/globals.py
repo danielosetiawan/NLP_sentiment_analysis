@@ -51,7 +51,7 @@ dropdown = html.Div(
         dbc.Label("Select Company"),
         dcc.Dropdown(
             df['ticker'].unique(),
-            "All",
+            'All',
             id="company",
             clearable=False,
         ),
@@ -112,7 +112,7 @@ colors = html.Div(
 colors = html.Div(["Theme Colors:", colors], className="mt-2")
 
 tab1 = dbc.Tab(label="Stocks", children=[
-            dcc.Graph(id='line-chart'),
+            dcc.Graph(id='line-chart', style={'width': '80vh', 'height': 1100}),
             # dcc.Graph(id='scatter-chart')
             ])
 tab2 = dbc.Tab(html.Div([

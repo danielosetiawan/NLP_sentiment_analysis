@@ -8,6 +8,11 @@ stocks_df = pd.read_csv('../data/scraped_stock_2015_2022.csv',
 
 cleaned_df = pd.read_csv('../data/word_cloud_df.csv', index_col=None)
 
+combined_df = pd.read_csv('../data/combined_sentiment.csv', index_col=None)
+combined_df['sentiment'] = combined_df['sentiment'].replace(to_replace=0, value=-1)
+combined_df['created_at'] = pd.to_datetime(combined_df['created_at'])
+combined_df['date'] = combined_df['created_at'].dt.date
+
 df = sent_df['raw_content'].str.upper().str.extractall(r'\$(\w+)')[0].reset_index()
 
 # remove indexes containing more than one ticker
