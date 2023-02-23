@@ -26,16 +26,10 @@ from wordcloud import WordCloud, STOPWORDS
 )
 
 def update_line_chart(company, analysis, yrs):
-    # if analysis == [] or company == 'All':
-    #     return {}, []
 
-    # if company == 'All':
-    #     # change this when you're done with testing
-    #     df = globals()['AAPL'][globals()['AAPL'].Date.dt.year.between(yrs[0], yrs[1])]
-    # else:
-    #     df = globals()[company][globals()[company].Date.dt.year.between(yrs[0], yrs[1])]
-
-    # data = df.to_dict("records")
+    if company == 'All':
+        # change this when you're done with testing
+        company = 'AAPL'
 
     df_comp = combined_df[combined_df['company'] == company]
     df_comp = df_comp.groupby('date', as_index=False)['sentiment'].mean()
@@ -49,9 +43,10 @@ def update_line_chart(company, analysis, yrs):
     combined = pd.merge(df_comp, stock_comp, how='left', on="Date")
     #data = combined.to_dict("records")
     # Create figure with secondary y-axis
-    fig = make_subplots(rows=3, cols=1, specs=[[{"secondary_y": True}], 
+    fig = make_subplots(rows=4, cols=1, specs=[[{"secondary_y": True, 'rowspan': 2}], 
+                                               [None],
                                                [{'rowspan': 1}],
-                                               [{'rowspan': 1}]], vertical_spacing=0.2,)
+                                               [{'rowspan': 1}]], vertical_spacing=0.1)
 
     # Add traces
     fig.add_trace(
@@ -60,7 +55,7 @@ def update_line_chart(company, analysis, yrs):
                     high=combined['High'],
                     low=combined['Low'],
                     close=combined['Close'],
-                    name="Stock Candlestick Price"),
+                    name=""),
         secondary_y=True,
     )
     
@@ -83,43 +78,56 @@ def update_line_chart(company, analysis, yrs):
 
     for df in combined_s:
         fig.add_traces(go.Scatter(x=df.Date, y = df.SMA30,
-                                line = dict(color='rgba(0,0,0,0)')))
+                                line = dict(color='rgba(0,0,0,0)'),
+                                hoverinfo='skip'
+                                ))
         
         fig.add_traces(go.Scatter(x=df.Date, y = df.SMA90,
                                 line = dict(color='rgba(0,0,0,0)'),
                                 fill='tonexty', 
-                                fillcolor = fillcol(df['label'].iloc[0])))
+                                fillcolor = fillcol(df['label'].iloc[0]),
+                                hoverinfo='skip'
+                                ))
 
     # include averages
     fig.add_traces(go.Scatter(x=combined1.Date, y = combined1.SMA30,
-                            line = dict(color = 'green', width=1), name='MA30'))
+                            line = dict(color = 'green', width=1), 
+                            name='MA30', hoverinfo='skip'
+                            ))
 
     fig.add_traces(go.Scatter(x=combined1.Date, y = combined1.SMA90,
-                            line = dict(color = 'red', width=1), name='MA90'))
+                            line = dict(color = 'red', width=1), 
+                            name='MA90', hoverinfo='skip'
+                            ))
     df2 = combined_df[combined_df['company'] == company]
     comp_group = df2.groupby(by=["date", "sentiment"], as_index=False).agg(
         count_col=pd.NamedAgg(column="sentiment", aggfunc="count"))
 
+    # subplot 1: sentiment volume
     trace1 = go.Bar(
         x = comp_group['date'],
-        y = comp_group['count_col'],
-        name=1,
+        y = comp_group[comp_group['sentiment'] == 1]['count_col'],
+        name='Bullish',
         marker_color='green',
-        marker_line_width=0)
+        marker_line_width=0
+        )
     trace2 = go.Bar(
         x = comp_group['date'],
-        y = comp_group['count_col'],
-        name=-1,
+        y = comp_group[comp_group['sentiment'] == -1]['count_col'],
+        name='Bearish',
         marker_color='red',
-        marker_line_width=0)
-    fig.add_traces([trace1, trace2], rows=2, cols=1)
+        marker_line_width=0
+        )
+    fig.add_traces([trace1, trace2], rows=3, cols=1)
     fig.update_layout(barmode = 'stack')
 
+    # subplot 2: stock volume
     stock_vol = go.Bar(
         x = combined['Date'],
         y = combined['Volume'],
+        name = 'Volume',
         marker_color='blue')
-    fig.add_trace(stock_vol, row=3, col=1)
+    fig.add_trace(stock_vol, row=4, col=1)
 
     # Set title
     fig.layout.update(title=f'{company} Stock Price v. Sentiment',
@@ -127,19 +135,20 @@ def update_line_chart(company, analysis, yrs):
 
     # Set x-axis title
     fig.update_xaxes(title_text="Date", row=1, col=1)
-    fig.update_xaxes(title_text="Date", row=2, col=1)
     fig.update_xaxes(title_text="Date", row=3, col=1)
+    fig.update_xaxes(title_text="Date", row=4, col=1)
     fig.update_layout(xaxis_rangeslider_visible=False)
     # Set y-axes titles
     fig.update_yaxes(title_text="Stock Price", secondary_y=True, row=1, col=1)
     fig.update_yaxes(title_text="Stock Sentiment", secondary_y=False, row=1, col=1)
-    fig.update_yaxes(title_text="Sentiment Volume", secondary_y=False, row=2, col=1)
-    fig.update_yaxes(title_text="Stock Volume", secondary_y=False, row=3, col=1)
+    fig.update_yaxes(title_text="Sentiment Volume", secondary_y=False, row=3, col=1)
+    fig.update_yaxes(title_text="Stock Volume", secondary_y=False, row=4, col=1)
     
     fig.update_layout(
-    width=1250,
-    height=1000,
+    width=800,
+    # height=850,
     showlegend=False,
+    hovermode='x unified', 
     template='plotly_white',
     legend=dict(
     x=0,
@@ -150,6 +159,7 @@ def update_line_chart(company, analysis, yrs):
         size=12,
         color="black"
     )))
+    fig.update_traces(xaxis='x1')
     return fig
 
 

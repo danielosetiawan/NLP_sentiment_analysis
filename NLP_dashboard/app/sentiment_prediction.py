@@ -20,8 +20,8 @@ torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
 
-tokenizer = RobertaTokenizer.from_pretrained('zhayunduo/roberta-base-stocktwits-finetuned')
-model = RobertaForSequenceClassification.from_pretrained('zhayunduo/roberta-base-stocktwits-finetuned')
+tokenizer = RobertaTokenizer.from_pretrained('../../data/model')
+model = RobertaForSequenceClassification.from_pretrained('../../data/model')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

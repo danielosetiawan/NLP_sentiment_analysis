@@ -155,7 +155,6 @@ wordCloud_bear = dbc.Card(
 app_layout = dbc.Container(
     [
         
-
         dbc.Row(
             [
                 # dbc.Col(
@@ -170,7 +169,7 @@ app_layout = dbc.Container(
                         controls,
                         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                         # When running this app locally, un-comment this line:
-                        # ThemeChangerAIO(aio_id="theme")
+                        ThemeChangerAIO(aio_id="theme"),
                         dbc.Row(
                             [
                                 dbc.Col(
