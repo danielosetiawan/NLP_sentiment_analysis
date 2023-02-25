@@ -6,6 +6,8 @@ from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from plotly import tools
+from PIL import Image
 
 import dash_bootstrap_components as dbc
 from sentiment_prediction import checkSenti
@@ -21,11 +23,11 @@ from wordcloud import WordCloud, STOPWORDS
     Output("line-chart", "figure"),
     #Output("table", "data"),
     Input("company", "value"),
-    Input("analysis", "value"),
-    Input("years", "value"),
+    # Input("analysis", "value"),
+    # Input("years", "value"),
 )
 
-def update_line_chart(company, analysis, yrs):
+def update_line_chart(company):
 
     if company == 'All':
         # change this when you're done with testing
@@ -46,7 +48,7 @@ def update_line_chart(company, analysis, yrs):
     fig = make_subplots(rows=4, cols=1, specs=[[{"secondary_y": True, 'rowspan': 2}], 
                                                [None],
                                                [{'rowspan': 1}],
-                                               [{'rowspan': 1}]], vertical_spacing=0.1)
+                                               [{'rowspan': 1}]], vertical_spacing=0.2)
 
     # Add traces
     fig.add_trace(
@@ -131,7 +133,7 @@ def update_line_chart(company, analysis, yrs):
 
     # Set title
     fig.layout.update(title=f'{company} Stock Price v. Sentiment',
-                     height=600, width=850, showlegend=True, hovermode='closest')
+                     showlegend=True, hovermode='closest')
 
     # Set x-axis title
     fig.update_xaxes(title_text="Date", row=1, col=1)
@@ -145,7 +147,7 @@ def update_line_chart(company, analysis, yrs):
     fig.update_yaxes(title_text="Stock Volume", secondary_y=False, row=4, col=1)
     
     fig.update_layout(
-    width=800,
+    # width=500,
     # height=850,
     showlegend=False,
     hovermode='x unified', 
@@ -180,11 +182,15 @@ def update_output(n_clicks, value):
 
 # callback for word cloud
 @callback(
-    [Output("wordcloud1", "src"),
-     Output("wordcloud2", "src")],
+    [Output("wordcloud1", "src")],
+    #  Output("wordcloud2", "src")],
     [Input("company", "value")]
 )
 def make_wordcloud(company):
+
+    if company == 'All':
+        # change this when you're done with testing
+        company = 'AAPL'
 
     # filter by company
     df_comp = cleaned_df[cleaned_df['company'] == company]
@@ -194,6 +200,12 @@ def make_wordcloud(company):
     text_bull = ' '.join(i for i in df_comp_bull['body'])
     text_bear = ' '.join(i for i in df_comp_bear['body'])
 
+    # Load the two images and convert them to numpy arrays
+    mask1 = np.array(Image.open('../../logos/bull.png'))
+    mask2 = np.array(Image.open('../../logos/bear.png'))
+
+
+
     wc = WordCloud(
         width=500,
         height=500,
@@ -202,10 +214,15 @@ def make_wordcloud(company):
         colormap="plasma",
         stopwords = set(STOPWORDS),
     )
-    img1 = BytesIO()
+    img = BytesIO()
     img2 = BytesIO()
-    wc.generate(text_bull).to_image().save(img1, format="png")
-    wc.generate(text_bear).to_image().save(img2, format="png")
+    #wc.generate(text_bull)#.to_image().save(img1, format="png")
+    #wc.generate(text_bear)#.to_image().save(img2, format="png")
+    plt.imshow(wc.generate(text_bull), interpolation="bilinear")
+    plt.axis("off")
+    plt.savefig(img, format="png")
+    image = base64.b64encode(img.seek(0).getvalue()).decode()
+    src=f"data:image/png;base64,{image}",
 
-    return "data:image/png;base64,{}".format(base64.b64encode(img1.getvalue()).decode()), "data:image/png;base64,{}".format(base64.b64encode(img2.getvalue()).decode()),
+    return src
 

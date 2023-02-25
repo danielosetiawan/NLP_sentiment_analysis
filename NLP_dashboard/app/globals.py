@@ -8,25 +8,25 @@ header = html.H4(
     "Sentiments NLP", className="bg-primary text-white p-2 mb-2 text-center"
 )
 
-nav_menu = dbc.NavbarSimple(
-    children=[
-        dbc.NavItem(dbc.NavLink("Page 1", href="#")),
-        dbc.DropdownMenu(
-            children=[
-                dbc.DropdownMenuItem("More pages", header=True),
-                dbc.DropdownMenuItem("Page 2", href="#"),
-                dbc.DropdownMenuItem("Page 3", href="#"),
-            ],
-            nav=True,
-            in_navbar=True,
-            label="More",
-        ),
-    ],
-    brand="NavbarSimple",
-    brand_href="#",
-    color="primary",
-    dark=True,
-)
+# nav_menu = dbc.NavbarSimple(
+#     children=[
+#         dbc.NavItem(dbc.NavLink("Page 1", href="#")),
+#         dbc.DropdownMenu(
+#             children=[
+#                 dbc.DropdownMenuItem("More pages", header=True),
+#                 dbc.DropdownMenuItem("Page 2", href="#"),
+#                 dbc.DropdownMenuItem("Page 3", href="#"),
+#             ],
+#             nav=True,
+#             in_navbar=True,
+#             label="More",
+#         ),
+#     ],
+#     brand="NavbarSimple",
+#     brand_href="#",
+#     color="primary",
+#     dark=True,
+# )
 
 
 table = html.Div(
@@ -54,6 +54,7 @@ dropdown = html.Div(
             'All',
             id="company",
             clearable=False,
+            # style={'position': 'relative', 'top': '-50px'}
         ),
     ],
     className="mb-4",
@@ -106,15 +107,38 @@ theme_colors = [
     "link",
 ]
 
-colors = html.Div(
-    [dbc.Button(f"{color}", color=f"{color}", size="sm") for color in theme_colors]
+# colors = html.Div(
+#     [dbc.Button(f"{color}", color=f"{color}", size="sm") for color in theme_colors]
+# )
+# colors = html.Div(["Theme Colors:", colors], className="mt-2")
+
+bearbull_wc = dbc.Card(
+    
+    [
+        dbc.CardImg(id='wordcloud', top=True),
+        dbc.CardBody(
+            html.P("Bullish Sentiment Word Cloud", className='card-text')
+        ),
+    ]
 )
-colors = html.Div(["Theme Colors:", colors], className="mt-2")
 
 tab1 = dbc.Tab(label="Stocks", children=[
-            dcc.Graph(id='line-chart', style={'width': '80vh', 'height': 1100}),
+            dbc.Col(
+                [
+                    dcc.Graph(id='line-chart'),# style={'width': '80vh', 'height': 1100}),
+                ],
+                width = 12
             # dcc.Graph(id='scatter-chart')
-            ])
+            ),
+            dbc.Row([
+                dbc.Col(
+                        [dropdown], width=3
+                        ),
+                dbc.Col(
+                        [bearbull_wc], width=9
+                        ),
+                ]),
+        ])
 tab2 = dbc.Tab(html.Div([
     dcc.Textarea(
         id='sentiment-prediction-text',
@@ -132,6 +156,7 @@ tab3 = dbc.Tab(label="Table", children=[
 ])
 tabs = dbc.Card(dbc.Tabs([tab1, tab2, tab3]))
 
+
 wordCloud_bull = dbc.Card(
     
     [
@@ -142,16 +167,16 @@ wordCloud_bull = dbc.Card(
     ]
 )
 
-wordCloud_bear = dbc.Card(
-    [
-        dbc.CardImg(id='wordcloud2', top=True),
-        dbc.CardBody(
-            html.P("Bearish Sentiment Word Cloud", className='card-text')
-        ),
-    ]
-)
+# wordCloud_bear = dbc.Card(
+#     [
+#         dbc.CardImg(id='wordcloud2', top=True),
+#         dbc.CardBody(
+#             html.P("Bearish Sentiment Word Cloud", className='card-text')
+#         ),
+#     ]
+# )
 
-
+# home
 app_layout = dbc.Container(
     [
         
@@ -162,24 +187,24 @@ app_layout = dbc.Container(
                 # ),
                 dbc.Col(
                     
-                    [tabs, colors], width=9
+                    [tabs], width=12
                     ),
-                dbc.Col(
-                    [
-                        controls,
-                        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        # When running this app locally, un-comment this line:
-                        ThemeChangerAIO(aio_id="theme"),
-                        dbc.Row(
-                            [
+                # dbc.Col(
+                #     [
+                #         controls,
+                #         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                #         # When running this app locally, un-comment this line:
+                #         # ThemeChangerAIO(aio_id="theme"),
+                #         dbc.Row(
+                #             [
                                 dbc.Col(
-                                    [wordCloud_bull, wordCloud_bear]
+                                    [wordCloud_bull]#, wordCloud_bear]
                                 ),
-                            ]
-                        ),
-                    ],
-                    width=3,
-                ),
+                #             ]
+                #         ),
+                #     ],
+                #     width=3,
+                # ),
                 # dbc.Col([tabs, colors], width=8),
             ]
         ),
