@@ -1,10 +1,38 @@
 import pandas as pd
 
-sent_df = pd.read_csv('../data/balanced_tokenized_cleaned_stocktwits.csv', 
+def sentiment_labeler(x):
+    if x < 0.4:
+        return 'negative'
+    elif x < 0.6:
+        return 'neutral'
+    else:
+        return 'positive'
+
+topics = ['bonds', 'cryptocurrency', 'economy', 
+    'interest_rates', 'recession', 'unemployment']#, 'inflation']
+
+for topic in topics:
+    df = pd.read_csv(f'../data/cleaned_up_data/cleaned_{topic}.csv').iloc[:, 1:]
+    df.Datetime = pd.to_datetime(df.Datetime).dt.strftime('%Y-%m-%d %H:00:00')
+    df['labels'] = df['sentiment'].apply(sentiment_labeler)
+    data = df.groupby('Datetime').agg({'sentiment': 'mean'}).reset_index()
+    data['labels'] = data['sentiment'].apply(sentiment_labeler)
+    
+    globals()[topic] = data
+    globals()[f'{topic}_raw'] = df
+
+sent_df = pd.read_csv('../data/preprocessing/balanced_tokenized_cleaned_stocktwits.csv', 
                  parse_dates=['created_at']).drop('body', axis=1)
 
-stocks_df = pd.read_csv('../data/scraped_stock_2015_2022.csv', 
+stocks_df = pd.read_csv('../data/scraped_stocks/scraped_stock_2015_2022.csv', 
                         parse_dates=['Date']).iloc[:, 1:]
+
+cleaned_df = pd.read_csv('../data/word_cloud_df.csv', index_col=None)
+
+combined_df = pd.read_csv('../data/combined_sentiment.csv', index_col=None)
+combined_df['sentiment'] = combined_df['sentiment'].replace(to_replace=0, value=-1)
+combined_df['created_at'] = pd.to_datetime(combined_df['created_at'])
+combined_df['date'] = combined_df['created_at'].dt.date
 
 df = sent_df['raw_content'].str.upper().str.extractall(r'\$(\w+)')[0].reset_index()
 

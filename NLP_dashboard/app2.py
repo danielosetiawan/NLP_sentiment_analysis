@@ -1,34 +1,23 @@
-from dash import Dash
+import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-from io import BytesIO
-import base64
+import plotly.graph_objs as go
+import pandas as pd
 
-text = "hello world this is a sample text for creating a wordcloud in dash"
+# Load your data into a Pandas DataFrame.
+df = pd.read_csv('your_data.csv')
 
-wordcloud = WordCloud().generate(text)
-buffer = BytesIO()
-plt.imshow(wordcloud, interpolation="bilinear")
-plt.axis("off")
-plt.savefig(buffer, format="png")
-buffer.seek(0)
-image = base64.b64encode(buffer.getvalue()).decode()
+# Create a go.Scatter trace for your data and set visible to False.
+trace = go.Scatter(x=df['x'], y=df['y'], mode='markers', visible=False)
 
-app = Dash(
-    prevent_initial_callbacks=True, suppress_callback_exceptions=True
-    # external_stylesheets=[dbc.themes.LUX]
-)
+# Create the Plotly graph figure.
+fig = go.Figure(data=[trace], layout=go.Layout(title='My Scatter Plot'))
 
+# Set the default layout and other components of your Dash app.
+app = dash.Dash(__name__)
+app.layout = html.Div([
+    dcc.Graph(id='my-graph', figure=fig),
+])
 
-app.layout = html.Div(
-    [
-        html.Img(
-            src=f"data:image/png;base64,{image}",
-            style={"height": "50vh", "display": "block", "margin": "auto"},
-        )
-    ]
-)
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run_server(debug=True)

@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from plotly import tools
 import dash_bootstrap_components as dbc
 from sentiment_prediction import checkSenti
+from content import *
 from globals import *
 from callbacks import *
 from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
@@ -16,7 +17,12 @@ from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 PLOTLY_LOGO = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
 
 app = Dash(
-    external_stylesheets=[dbc.themes.LUX, dbc.icons.FONT_AWESOME]
+    external_stylesheets=[
+        dbc.themes.LUX, dbc.icons.FONT_AWESOME, 
+        # 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'
+    ],
+    prevent_initial_callbacks=True,
+    suppress_callback_exceptions=True,
     # external_stylesheets=[dbc.themes.LUX]
 )
 
