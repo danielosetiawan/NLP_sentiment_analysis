@@ -49,10 +49,10 @@ def topic_data(topic):
     positive = round((df_raw['labels'].value_counts()['positive'] / len(df_raw)) * 100)
 
     volume = [
-        html.H2(f'{len(df_raw):,d}', style=style),
+        html.H1(f'{len(df_raw):,d}', style=style),
+        html.P(f'Positive: {positive}%', className="text-success", style=style),
         html.P(f'Negative: {negative}%', className="text-danger", style=style),
         # html.P(f'Neutral: {neutral}%', className="text-warning", style=style),
-        html.P(f'Positive: {positive}%', className="text-success", style=style),
     ]
 
     # sentiment section
@@ -137,14 +137,14 @@ def topic_data(topic):
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
-                    html.Div([
-                        html.P([
-                            html.H4([
+                    # html.Div([
+                    #     html.P([
+                            html.H5([
                                 f'{topic.replace("_", " ")} ',
                                 html.I(className="fa fa-dollar", 
-                                    style={'font-size': '2rem'}),
-                                ]),
-                        ])
+                                    style={'font-size': '1rem'}),
+                        #         ]),
+                        # ])
                     ])
                 ], width = 4),
                 dbc.Col([*volume], style = {'margin-left': '-5px'}),
@@ -163,16 +163,25 @@ topic_style = {
     # 'text-decoration': 'underline'
 }
 
-style = {'margin-top': '-15px', 'margin-bottom': '-15px'}
+style = {'margin-top': '-5px', 'margin-bottom': '-5px', 'font-weight': 'bold'}
+style2 = {'margin-top': '-5px', 'margin-bottom': '-30px', 
+          'font-style': 'italic', 'font-size': '10px'}
 topic_title = dbc.Card(
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([html.H4('Topic')], style = style, width = 4),
-                dbc.Col([html.H4('Mentions'), html.P('(past year)')], style = style, width = 2),
-                dbc.Col([html.H4('Sentiment'), html.P('(past 7 days)')], style = style, width = 2),
-                dbc.Col([html.H4('Trajectory'), html.P('(past 7 days)')], style = style, width = 2),
+                dbc.Col([html.H4('Mentions')], style = style, width = 2),
+                dbc.Col([html.H4('Sentiment')], style = style, width = 2),
+                dbc.Col([html.H4('Direction')], style = style, width = 2),
                 dbc.Col([html.H4('Chart')], style = style, width = 2),
-                ], className='g-0')
+                ], className='g-0'),
+            dbc.Row([
+                dbc.Col([], style = style, width = 4),
+                dbc.Col([html.P('(past year)')], style = style2, width = 2),
+                dbc.Col([html.P('(past 7 days)')], style = style2, width = 2),
+                dbc.Col([html.P('(past 7 days)')], style = style2, width = 2),
+                ], className='g-0'),
+
             ])
         )
 
