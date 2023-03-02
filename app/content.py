@@ -43,7 +43,7 @@ tab2 = dbc.Tab(html.Div([
 tab3 = dbc.Tab(id='topic_tab', label="Sentiment Topics", children=[
     dbc.Row([
         dbc.Col([
-            topic_title, *topics,
+            topic_title, *sent_topics,
         ], width=12),
         # dbc.Col([
         #     topics, topics,

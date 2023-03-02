@@ -187,13 +187,19 @@ topic_title = dbc.Card(
 
 # topics = dbc.Card(
 #     dbc.CardBody(
-topics = [
+sent_topics = [
             topic_data('bonds'),
             topic_data('economy'),
             topic_data('recession'),
             topic_data('unemployment'),
+            topic_data('forex'),
+            topic_data('inflation'),
+            topic_data('taxes'),
+            topic_data('housing_market'),
+            topic_data('minimum_wage'),
             topic_data('interest_rates'),
-            topic_data('cryptocurrency')
+            topic_data('stocks'),
+            topic_data('cryptocurrency'),
             ]
      #   ])#, color='red', outline=True
     # style={"width": "75rem"},

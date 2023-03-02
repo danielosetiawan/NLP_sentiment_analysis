@@ -8,8 +8,11 @@ def sentiment_labeler(x):
     else:
         return 'positive'
 
-topics = ['bonds', 'cryptocurrency', 'economy', 
-    'interest_rates', 'recession', 'unemployment']#, 'inflation']
+topics = [
+    'bonds', 'cryptocurrency', 'economy', 'forex', 'housing_market',
+    'interest_rates', 'recession', 'unemployment', 'inflation', 
+    'stocks', 'minimum_wage', 'taxes'
+    ]
 
 for topic in topics:
     df = pd.read_csv(f'../data/cleaned_up_data/cleaned_{topic}.csv').iloc[:, 1:]

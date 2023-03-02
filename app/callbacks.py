@@ -161,8 +161,24 @@ def update_line_chart(company):
 
     # updating y-axis ranges for the subplot
     company_dct = {
-        'AAPL': {'sentiment': [0.6, 0.8], 'volume': [0, 500000000]},
-        'CRM': {'sentiment': [0.7, 0.9], 'volume': [0, 500000000]}
+        'AAPL': {'sentiment': [0.6, 0.8], 'volume': [0, 5e8]},
+        'AMZN': {'sentiment': [0.65, 0.85], 'volume': [0, 6e8]},
+        'CRM': {'sentiment': [0.7, 0.9], 'volume': [0, 1e7]}, 
+        'DIS': {'sentiment': [0.5, 0.8], 'volume': [0, 6e7]},
+        'GOOG': {'sentiment': [0.6, 0.8], 'volume': [0, 1.5e8]},
+        'KO': {'sentiment': [0.6, 0.8], 'volume': [0, 6e7]},
+        'MSFT': {'sentiment': [0.6, 0.9], 'volume': [0, 1.5e8]}, 
+        'TSLA': {'sentiment': [0.5, 0.8], 'volume': [0, 8e8]},
+        'BA': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
+        'BX': {'sentiment': [0.6, 0.9], 'volume': [0, 2e7]},
+        'NOC': {'sentiment': [0.6, 0.9], 'volume': [0, 6e6]},
+        'NFLX': {'sentiment': [0.5, 0.8], 'volume': [0, 5e7]},
+        'TSM': {'sentiment': [0.7, 0.9], 'volume': [0, 5e7]},
+        'META': {'sentiment': [0.8, 0.95], 'volume': [0, 1.5e8]},
+        'PYPL': {'sentiment': [0.6, 0.9], 'volume': [0, 4e7]},
+        'PG': {'sentiment': [0.6, 0.8], 'volume': [0, 5e7]},
+        'ZS': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
+        'NIO': {'sentiment': [0.7, 0.9], 'volume': [0, 6e8]},
     }
     
     try:
@@ -253,62 +269,13 @@ def plot_wordcloud(company):
     return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
 
 
-@callback(
-    Output("bonds-modal", "is_open"),
-    Input("bonds-button", "n_clicks"),
-    State("bonds-modal", "is_open"),
-)
-def toggle_modal(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-    
-@callback(
-    Output("cryptocurrency-modal", "is_open"),
-    Input("cryptocurrency-button", "n_clicks"),
-    State("cryptocurrency-modal", "is_open"),
-)
-def toggle_modal(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-@callback(
-    Output("economy-modal", "is_open"),
-    Input("economy-button", "n_clicks"),
-    State("economy-modal", "is_open"),
-)
-def toggle_modal(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-@callback(
-    Output("interest_rates-modal", "is_open"),
-    Input("interest_rates-button", "n_clicks"),
-    State("interest_rates-modal", "is_open"),
-)
-def toggle_modal(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-@callback(
-    Output("recession-modal", "is_open"),
-    Input("recession-button", "n_clicks"),
-    State("recession-modal", "is_open"),
-)
-def toggle_modal(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-@callback(
-    Output("unemployment-modal", "is_open"),
-    Input("unemployment-button", "n_clicks"),
-    State("unemployment-modal", "is_open"),
-)
-def toggle_modal(n, is_open):
-    if n:
-        return not is_open
-    return is_open
+for topic in topics:
+    @callback(
+        Output(f"{topic}-modal", "is_open"),
+        Input(f"{topic}-button", "n_clicks"),
+        State(f"{topic}-modal", "is_open"),
+    )
+    def toggle_modal(n, is_open):
+        if n:
+            return not is_open
+        return is_open
