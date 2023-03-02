@@ -224,7 +224,7 @@ dropdown = html.Div(
     [
         dbc.Label("Select Company", style={'top': '-20px'}),
         dcc.Dropdown(
-            options=df['ticker'].unique(),
+            options=tweets_df['Stock Name'].unique(),
             value='All',
             id="company",
             clearable=False,
@@ -234,38 +234,38 @@ dropdown = html.Div(
     className="mb-4",
 )
 
-checklist = html.Div(
-    [
-        dbc.Label("Select Analysis"),
-        dbc.Checklist(
-            id="analysis",
-            options=stocks_df.columns,
-            value=stocks_df.columns,
-            inline=True,
-        ),
-    ],
-    className="mb-4",
-)
+# checklist = html.Div(
+#     [
+#         dbc.Label("Select Analysis"),
+#         dbc.Checklist(
+#             id="analysis",
+#             options=stocks_df.columns,
+#             value=stocks_df.columns,
+#             inline=True,
+#         ),
+#     ],
+#     className="mb-4",
+# )
 
-slider = html.Div(
-    [
-        dbc.Label("Select Years"),
-        dcc.RangeSlider(
-            stocks_df.Date.dt.year.min(),
-            stocks_df.Date.dt.year.max(),
-            1,
-            id="years",
-            marks=None,
-            tooltip={"placement": "bottom", "always_visible": True},
-            value=[2017, 2020],
-            className="p-0",
-        ),
-    ],
-    className="mb-4",
-)
+# slider = html.Div(
+#     [
+#         dbc.Label("Select Years"),
+#         dcc.RangeSlider(
+#             stocks_df.Date.dt.year.min(),
+#             stocks_df.Date.dt.year.max(),
+#             1,
+#             id="years",
+#             marks=None,
+#             tooltip={"placement": "bottom", "always_visible": True},
+#             value=[2017, 2020],
+#             className="p-0",
+#         ),
+#     ],
+#     className="mb-4",
+# )
 
 controls = dbc.Card(
-    [dropdown, checklist, slider],
+    [dropdown],#, checklist],#, slider],
     body=True,
 )
 

@@ -40,52 +40,56 @@ def update_line_chart(company):
     if company == 'All':
         # change this when you're done with testing
         company = 'AAPL'
+        
+    data = tweets_df[tweets_df['Stock Name'] == company]
 
-    df_comp = combined_df[combined_df['company'] == company]
-    df_comp = df_comp.groupby('date', as_index=False)['sentiment'].mean()
-    df_comp['SMA30'] = df_comp['sentiment'].rolling(30).mean()
-    df_comp['SMA90'] = df_comp ['sentiment'].rolling(90).mean()
-    df_comp = df_comp.rename(columns={'date': 'Date'})
+    STM = data['sentiment avg'].rolling(50).mean() #short term sentiment
+    MTM = data['sentiment avg'].rolling(200).mean() #long term sentiment
+    data['SMA30'] = data['sentiment avg'].rolling(50).mean()
+    data['SMA90'] = data['sentiment avg'].rolling(200).mean()
+    
+    data['label'] = np.where(data['SMA30']>data['SMA90'], 1, 0)
+    data['group'] = data['label'].ne(data['label'].shift()).cumsum()
 
-    stock_comp = stocks_df[stocks_df['Stock Name'] == company]
-    stock_comp['Date'] = pd.to_datetime(stock_comp['Date'])
-    stock_comp['Date'] = stock_comp['Date'].dt.date
-    combined = pd.merge(df_comp, stock_comp, how='left', on="Date")
-    #data = combined.to_dict("records")
-    # Create figure with secondary y-axis
-    fig = make_subplots(rows=4, cols=1, specs=[[{"secondary_y": True, 'rowspan': 2}], 
-                                               [None],
-                                               [{'rowspan': 1}],
-                                               [{'rowspan': 1}]], vertical_spacing=0.05)
-
-    # Add traces
-    fig.add_trace(
-        go.Candlestick(x=combined['Date'],
-                    open=combined['Open'],
-                    high=combined['High'],
-                    low=combined['Low'],
-                    close=combined['Close'],
-                    name=""),
-        secondary_y=True,
+    # create subplot layout
+    fig = make_subplots(
+        rows=4, cols=1, 
+        row_heights=[1.5, 1.5, 1.5, 1.5],
+        vertical_spacing=0.15,
+        specs=[[{"secondary_y": True, 'rowspan': 2}], 
+               [None],
+               [{'rowspan': 1}],
+               [{'rowspan': 1}]]
     )
     
-    combined1 = combined.copy()
+    
+######## subplot 1: sentiment v. stock ########
 
-    # split data into chunks where averages cross each other
-    combined['label'] = np.where(combined['SMA30']>combined['SMA90'], 1, 0)
-    combined['group'] = combined['label'].ne(combined['label'].shift()).cumsum()
-    combined2 = combined.groupby('group')
+    # subplot 1A: candlestick trace
+    fig.add_trace(
+        go.Candlestick(x=data['Date'],
+                    open=data['Open'],
+                    high=data['High'],
+                    low=data['Low'],
+                    close=data['Close'],
+                    name=""),
+        secondary_y=True)
+    
+    # subplot 1B: grouping colors by trace crosses
+    combined1 = data.copy()
+    combined = data.groupby('group')
     combined_s = []
-    for name, data in combined2:
-        combined_s.append(data)
+    for _, dta in combined:
+        combined_s.append(dta)
 
-    # custom function to set fill color
+    # custom function to set fill colors
     def fillcol(label):
         if label >= 1:
             return 'rgba(0,250,0,0.4)'
         else:
             return 'rgba(250,0,0,0.4)'
 
+    # subplot 1B: make moving average lines transparrent
     for df in combined_s:
         fig.add_traces(go.Scatter(x=df.Date, y = df.SMA30,
                                 line = dict(color='rgba(0,0,0,0)'),
@@ -99,7 +103,7 @@ def update_line_chart(company):
                                 hoverinfo='skip'
                                 ))
 
-    # include averages
+    # subplot 1B: add colors for traces that cross MA
     fig.add_traces(go.Scatter(x=combined1.Date, y = combined1.SMA30,
                             line = dict(color = 'green', width=1), 
                             name='MA30', hoverinfo='skip'
@@ -109,56 +113,66 @@ def update_line_chart(company):
                             line = dict(color = 'red', width=1), 
                             name='MA90', hoverinfo='skip'
                             ))
-    df2 = combined_df[combined_df['company'] == company]
-    comp_group = df2.groupby(by=["date", "sentiment"], as_index=False).agg(
-        count_col=pd.NamedAgg(column="sentiment", aggfunc="count"))
 
-    # subplot 1: sentiment volume
-    trace1 = go.Bar(
-        x = comp_group['date'],
-        y = comp_group[comp_group['sentiment'] == 1]['count_col'],
-        name='Bullish',
-        marker_color='green',
-        marker_line_width=0
+######## subplot 2: sentiment ########
+
+    trace1 = go.Line(
+        x = data['Date'],
+        y = STM,
+        name='Short Term',
+        marker_line_width=0,
+        marker_color = 'orange',
         )
-    trace2 = go.Bar(
-        x = comp_group['date'],
-        y = comp_group[comp_group['sentiment'] == -1]['count_col'],
-        name='Bearish',
-        marker_color='red',
-        marker_line_width=0
+    trace2 = go.Line(
+        x = data['Date'],
+        y = MTM,
+        name='Long Term',
+        marker_line_width=0,
+        marker_color = 'blue',
         )
+
     fig.add_traces([trace1, trace2], rows=3, cols=1)
-    fig.update_layout(barmode = 'stack')
 
-    # subplot 2: stock volume
+######## subplot 3: stock volume ########
     stock_vol = go.Bar(
-        x = combined['Date'],
-        y = combined['Volume'],
+        x = data['Date'],
+        y = data['Volume'],
         name = 'Volume',
-        marker_color='blue')
+        marker_color='black',
+    )
     fig.add_trace(stock_vol, row=4, col=1)
+    
+######## subplot layouts ########
 
     # Set title
     fig.layout.update(title=f'{company} Stock Price v. Sentiment',
                      showlegend=True, hovermode='closest')
 
-    # Set x-axis title
+    # Set axis title
     fig.update_xaxes(title_text="Date", row=1, col=1)
-    fig.update_xaxes(title_text="Date", row=3, col=1)
-    fig.update_xaxes(title_text="Date", row=4, col=1)
-    fig.update_layout(xaxis_rangeslider_visible=False)
-    # Set y-axes titles
+
     fig.update_yaxes(title_text="Stock Price", secondary_y=True, row=1, col=1)
     fig.update_yaxes(title_text="Stock Sentiment", secondary_y=False, row=1, col=1)
-    fig.update_yaxes(title_text="Sentiment Volume", secondary_y=False, row=3, col=1)
-    fig.update_yaxes(title_font=dict(size=10), secondary_y=False, row=3, col=1)
-    fig.update_yaxes(title_text="Stock Volume", secondary_y=False, row=4, col=1)
-    fig.update_yaxes(title_font=dict(size=10), secondary_y=False, row=4, col=1)
+    fig.update_yaxes(title_text="Sentiment", secondary_y=False, row=3, col=1)
+    fig.update_yaxes(title_text="Volume", secondary_y=False, row=4, col=1)
 
-    # set y-axes subplots to display only min/max
-    # fig.update_layout(yaxis=dict(tickmode='linear', nticks=2, 
-    #     range=[min(combined['Volume']), max(combined['Volume'])], row=4, col=1))
+    # hiding the bottom range window
+    fig.update_layout(xaxis_rangeslider_visible=False)
+
+    # updating y-axis ranges for the subplot
+    company_dct = {
+        'AAPL': {'sentiment': [0.6, 0.8], 'volume': [0, 500000000]},
+        'CRM': {'sentiment': [0.7, 0.9], 'volume': [0, 500000000]}
+    }
+    
+    try:
+        
+        fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['sentiment'], row=3, col=1)
+        fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['volume'], row=4, col=1)
+        fig.update_yaxes(range=company_dct[company]['volume'], secondary_y=False, row=4, col=1)
+        
+    except:
+        pass
     
     fig.update_layout(
     # width=500,
@@ -167,14 +181,15 @@ def update_line_chart(company):
     hovermode='x unified', 
     template='plotly_white',
     legend=dict(
-    x=0,
-    y=1.05,
-    traceorder="normal",
-    font=dict(
-        family="sans-serif",
-        size=12,
-        color="black"
-    )))
+        x=0,
+        y=1.05,
+        traceorder="normal",
+        font=dict(
+            family="sans-serif",
+            size=12,
+            color="black"
+        )),
+    )
     fig.update_traces(xaxis='x1')
     return fig
 
