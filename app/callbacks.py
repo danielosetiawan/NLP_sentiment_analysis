@@ -56,26 +56,10 @@ def update_line_chart(company):
         rows=4, cols=1, 
         row_heights=[1.5, 1.5, 1.5, 1.5],
         vertical_spacing=0.15,
-        specs=[[{"secondary_y": True, 'rowspan': 2}], 
-               [None],
-               [{'rowspan': 1}],
-               [{'rowspan': 1}]]
+        x_title='Date'
     )
-    
-    
-######## subplot 1: sentiment v. stock ########
-
-    # subplot 1A: candlestick trace
-    fig.add_trace(
-        go.Candlestick(x=data['Date'],
-                    open=data['Open'],
-                    high=data['High'],
-                    low=data['Low'],
-                    close=data['Close'],
-                    name=""),
-        secondary_y=True)
-    
-    # subplot 1B: grouping colors by trace crosses
+######## subplot 1: sentiment ########
+    # grouping colors by trace crosses
     combined1 = data.copy()
     combined = data.groupby('group')
     combined_s = []
@@ -89,7 +73,7 @@ def update_line_chart(company):
         else:
             return 'rgba(250,0,0,0.4)'
 
-    # subplot 1B: make moving average lines transparrent
+    # make moving average lines transparrent
     for df in combined_s:
         fig.add_traces(go.Scatter(x=df.Date, y = df.SMA30,
                                 line = dict(color='rgba(0,0,0,0)'),
@@ -103,7 +87,7 @@ def update_line_chart(company):
                                 hoverinfo='skip'
                                 ))
 
-    # subplot 1B: add colors for traces that cross MA
+    # add colors for traces that cross MA
     fig.add_traces(go.Scatter(x=combined1.Date, y = combined1.SMA30,
                             line = dict(color = 'green', width=1), 
                             name='MA30', hoverinfo='skip'
@@ -114,33 +98,89 @@ def update_line_chart(company):
                             name='MA90', hoverinfo='skip'
                             ))
 
-######## subplot 2: sentiment ########
+######## subplot 2: stock ########
 
-    trace1 = go.Line(
-        x = data['Date'],
-        y = STM,
-        name='Short Term',
+    # subplot 2A: stock price
+    price_trace = go.Scatter(x=data['Date'],
+                y=data['Adj Close'],
+                mode='lines',
+                marker_line_width=0,
+                marker_color = 'blue',
+                name="Adj Close")
+    
+    # subplot 2B: adding buy/sell signals
+    def RSIcalc(df):
+        df['MA200'] = df['Adj Close'].rolling(window=200).mean()
+        df['price change'] = df['Adj Close'].pct_change()
+        df['Upmove'] = df['price change'].apply(lambda x: x if x>0 else 0)
+        df['Downmove'] = df['price change'].apply(lambda x: abs(x) if x<0 else 0)
+        df['avg Up'] = df['Upmove'].ewm(span=19).mean()
+        df['avg Down'] = df['Downmove'].ewm(span=19).mean()
+        df = df.dropna()
+        df['RS'] = df['avg Up']/df['avg Down']
+        df['RSI'] = df['RS'].apply(lambda x: 100-(100/(x+1)))
+        df.loc[(df['Adj Close'] > df['MA200']) & (df['RSI'] < 30), 'Buy'] = 'Yes'
+        df.loc[(df['Adj Close'] < df['MA200']) | (df['RSI'] > 30), 'Buy'] = 'No'
+        return df
+    
+    def getSignals(df):
+        Buying_dates=[]
+        Selling_dates=[]
+        
+        for i in range(len(df)):
+            if "Yes" in df['Buy'].iloc[i]:
+                Buying_dates.append(df.iloc[i+1].name)
+                for j in range(1, 11):
+                    if df['RSI'].iloc[i+j] > 40:
+                        Selling_dates.append(df.iloc[i+j+1].name)
+                        break
+                    elif j == 10:
+                        Selling_dates.append(df.iloc[i+j+1].name)
+        return Buying_dates, Selling_dates
+    
+    frame = RSIcalc(data)
+    buy, sell = getSignals(frame)
+    buy_trace = go.Scatter(x=pd.to_datetime(frame.loc[buy]['Date']), y = frame.loc[buy]['Adj Close'],
+                              marker=dict(symbol='triangle-up', color='green'), 
+                              mode = 'markers', name='buy'
+                            )
+    sell_trace = go.Scatter(x=pd.to_datetime(frame.loc[sell]['Date']), y = frame.loc[sell]['Adj Close'],
+                              marker=dict(symbol='triangle-up', color='red'), 
+                              mode = 'markers', name='sell'
+                            )
+    fig.add_traces([price_trace, buy_trace, sell_trace], rows=2, cols=1)
+    
+######## subplot 3: RSI ########
+
+    trace1 = go.Scatter(
+        x = pd.to_datetime(frame['Date']),
+        y = frame['RSI'],
+        name='RSI',
+        mode='lines',
         marker_line_width=0,
         marker_color = 'orange',
         )
-    trace2 = go.Line(
-        x = data['Date'],
-        y = MTM,
-        name='Long Term',
-        marker_line_width=0,
-        marker_color = 'blue',
-        )
+    trace2 = go.Scatter(x = pd.to_datetime(frame['Date']),
+        y = np.repeat(30, len(frame['Date'])),
+        name='oversold',
+        line=dict(color='green', dash='dash'))
+    trace3 = go.Scatter(x = pd.to_datetime(frame['Date']),
+        y = np.repeat(70, len(frame['Date'])),
+        name='overbought',
+        line=dict(color='indianred', dash='dash'))
+    fig.add_traces([trace1, trace2, trace3], rows=3, cols=1)
 
-    fig.add_traces([trace1, trace2], rows=3, cols=1)
-
-######## subplot 3: stock volume ########
+######## subplot 4: stock volume ########
     stock_vol = go.Bar(
         x = data['Date'],
         y = data['Volume'],
-        name = 'Volume',
-        marker_color='black',
+        name = 'Stock Volume',
+        marker_color='rgb(158,202,225)',
+        marker_line_width=0,
     )
+    
     fig.add_trace(stock_vol, row=4, col=1)
+    
     
 ######## subplot layouts ########
 
@@ -149,46 +189,45 @@ def update_line_chart(company):
                      showlegend=True, hovermode='closest')
 
     # Set axis title
-    fig.update_xaxes(title_text="Date", row=1, col=1)
-
-    fig.update_yaxes(title_text="Stock Price", secondary_y=True, row=1, col=1)
-    fig.update_yaxes(title_text="Stock Sentiment", secondary_y=False, row=1, col=1)
-    fig.update_yaxes(title_text="Sentiment", secondary_y=False, row=3, col=1)
-    fig.update_yaxes(title_text="Volume", secondary_y=False, row=4, col=1)
+    fig.update_yaxes(title_text="Sentiment", row=1, col=1)
+    fig.update_yaxes(title_text="Stock Price", row=2, col=1)
+    fig.update_yaxes(title_text="RSI", row=3, col=1)
+    fig.update_yaxes(title_text="Stock Volume", row=4, col=1)
+    #fig.update_xaxes(title_text="Date", row=4, col=1)
 
     # hiding the bottom range window
     fig.update_layout(xaxis_rangeslider_visible=False)
 
     # updating y-axis ranges for the subplot
-    company_dct = {
-        'AAPL': {'sentiment': [0.6, 0.8], 'volume': [0, 5e8]},
-        'AMZN': {'sentiment': [0.65, 0.85], 'volume': [0, 6e8]},
-        'CRM': {'sentiment': [0.7, 0.9], 'volume': [0, 1e7]}, 
-        'DIS': {'sentiment': [0.5, 0.8], 'volume': [0, 6e7]},
-        'GOOG': {'sentiment': [0.6, 0.8], 'volume': [0, 1.5e8]},
-        'KO': {'sentiment': [0.6, 0.8], 'volume': [0, 6e7]},
-        'MSFT': {'sentiment': [0.6, 0.9], 'volume': [0, 1.5e8]}, 
-        'TSLA': {'sentiment': [0.5, 0.8], 'volume': [0, 8e8]},
-        'BA': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
-        'BX': {'sentiment': [0.6, 0.9], 'volume': [0, 2e7]},
-        'NOC': {'sentiment': [0.6, 0.9], 'volume': [0, 6e6]},
-        'NFLX': {'sentiment': [0.5, 0.8], 'volume': [0, 5e7]},
-        'TSM': {'sentiment': [0.7, 0.9], 'volume': [0, 5e7]},
-        'META': {'sentiment': [0.8, 0.95], 'volume': [0, 1.5e8]},
-        'PYPL': {'sentiment': [0.6, 0.9], 'volume': [0, 4e7]},
-        'PG': {'sentiment': [0.6, 0.8], 'volume': [0, 5e7]},
-        'ZS': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
-        'NIO': {'sentiment': [0.7, 0.9], 'volume': [0, 6e8]},
-    }
+    # company_dct = {
+    #     'AAPL': {'sentiment': [0.6, 0.8], 'volume': [0, 5e8]},
+    #     'AMZN': {'sentiment': [0.65, 0.85], 'volume': [0, 6e8]},
+    #     'CRM': {'sentiment': [0.7, 0.9], 'volume': [0, 1e7]}, 
+    #     'DIS': {'sentiment': [0.5, 0.8], 'volume': [0, 6e7]},
+    #     'GOOG': {'sentiment': [0.6, 0.8], 'volume': [0, 1.5e8]},
+    #     'KO': {'sentiment': [0.6, 0.8], 'volume': [0, 6e7]},
+    #     'MSFT': {'sentiment': [0.6, 0.9], 'volume': [0, 1.5e8]}, 
+    #     'TSLA': {'sentiment': [0.5, 0.8], 'volume': [0, 8e8]},
+    #     'BA': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
+    #     'BX': {'sentiment': [0.6, 0.9], 'volume': [0, 2e7]},
+    #     'NOC': {'sentiment': [0.6, 0.9], 'volume': [0, 6e6]},
+    #     'NFLX': {'sentiment': [0.5, 0.8], 'volume': [0, 5e7]},
+    #     'TSM': {'sentiment': [0.7, 0.9], 'volume': [0, 5e7]},
+    #     'META': {'sentiment': [0.8, 0.95], 'volume': [0, 1.5e8]},
+    #     'PYPL': {'sentiment': [0.6, 0.9], 'volume': [0, 4e7]},
+    #     'PG': {'sentiment': [0.6, 0.8], 'volume': [0, 5e7]},
+    #     'ZS': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
+    #     'NIO': {'sentiment': [0.7, 0.9], 'volume': [0, 6e8]},
+    # }
     
-    try:
+    # try:
         
-        fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['sentiment'], row=3, col=1)
-        fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['volume'], row=4, col=1)
-        fig.update_yaxes(range=company_dct[company]['volume'], secondary_y=False, row=4, col=1)
+    #     fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['sentiment'], row=3, col=1)
+    #     fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['volume'], row=4, col=1)
+    #     fig.update_yaxes(range=company_dct[company]['volume'], secondary_y=False, row=4, col=1)
         
-    except:
-        pass
+    # except:
+    #     pass
     
     fig.update_layout(
     # width=500,
