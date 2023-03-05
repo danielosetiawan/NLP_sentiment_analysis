@@ -7,7 +7,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly import tools
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
+from matplotlib import colors
+import colorsys
 
 import dash_bootstrap_components as dbc
 from sentiment_prediction import checkSenti
@@ -19,20 +21,10 @@ from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 
 
-# @callback(
-#     Output('inflation-chart', 'figure'),
-#     []
-# )
-
-
-
 # callback for tab1
 @callback(
     Output("line-chart", "figure"),
-    #Output("table", "data"),
     Input("company", "value"),
-    # Input("analysis", "value"),
-    # Input("years", "value"),
 )
 
 def update_line_chart(company):
@@ -43,10 +35,8 @@ def update_line_chart(company):
         
     data = tweets_df[tweets_df['Stock Name'] == company]
 
-    STM = data['sentiment avg'].rolling(50).mean() #short term sentiment
-    MTM = data['sentiment avg'].rolling(200).mean() #long term sentiment
     data['SMA30'] = data['sentiment avg'].rolling(50).mean()
-    data['SMA90'] = data['sentiment avg'].rolling(200).mean()
+    data['SMA90'] = data['sentiment avg'].rolling(90).mean()
     
     data['label'] = np.where(data['SMA30']>data['SMA90'], 1, 0)
     data['group'] = data['label'].ne(data['label'].shift()).cumsum()
@@ -54,9 +44,10 @@ def update_line_chart(company):
     # create subplot layout
     fig = make_subplots(
         rows=4, cols=1, 
-        row_heights=[1.5, 1.5, 1.5, 1.5],
-        vertical_spacing=0.15,
-        x_title='Date'
+        row_heights=[4, 3.5, 3.5, 2],
+        vertical_spacing=0.05,
+        x_title='Date',
+        shared_xaxes=True
     )
 ######## subplot 1: sentiment ########
     # grouping colors by trace crosses
@@ -90,12 +81,12 @@ def update_line_chart(company):
     # add colors for traces that cross MA
     fig.add_traces(go.Scatter(x=combined1.Date, y = combined1.SMA30,
                             line = dict(color = 'green', width=1), 
-                            name='MA30', hoverinfo='skip'
+                            name='Short Term'
                             ))
 
     fig.add_traces(go.Scatter(x=combined1.Date, y = combined1.SMA90,
                             line = dict(color = 'red', width=1), 
-                            name='MA90', hoverinfo='skip'
+                            name='Long term'
                             ))
 
 ######## subplot 2: stock ########
@@ -142,16 +133,16 @@ def update_line_chart(company):
     buy, sell = getSignals(frame)
     buy_trace = go.Scatter(x=pd.to_datetime(frame.loc[buy]['Date']), y = frame.loc[buy]['Adj Close'],
                               marker=dict(symbol='triangle-up', color='green'), 
-                              mode = 'markers', name='buy'
+                              mode = 'markers', name='Buy'
                             )
     sell_trace = go.Scatter(x=pd.to_datetime(frame.loc[sell]['Date']), y = frame.loc[sell]['Adj Close'],
                               marker=dict(symbol='triangle-up', color='red'), 
-                              mode = 'markers', name='sell'
+                              mode = 'markers', name='Sell'
                             )
     fig.add_traces([price_trace, buy_trace, sell_trace], rows=2, cols=1)
-    
-######## subplot 3: RSI ########
 
+######## subplot 3: RSI ########
+    
     trace1 = go.Scatter(
         x = pd.to_datetime(frame['Date']),
         y = frame['RSI'],
@@ -190,64 +181,30 @@ def update_line_chart(company):
 
     # Set axis title
     fig.update_yaxes(title_text="Sentiment", row=1, col=1)
-    fig.update_yaxes(title_text="Stock Price", row=2, col=1)
+    fig.update_yaxes(title_text="Price", row=2, col=1)
     fig.update_yaxes(title_text="RSI", row=3, col=1)
-    fig.update_yaxes(title_text="Stock Volume", row=4, col=1)
-    #fig.update_xaxes(title_text="Date", row=4, col=1)
+    fig.update_yaxes(title_text="Volume", row=4, col=1)
 
     # hiding the bottom range window
     fig.update_layout(xaxis_rangeslider_visible=False)
-
-    # updating y-axis ranges for the subplot
-    # company_dct = {
-    #     'AAPL': {'sentiment': [0.6, 0.8], 'volume': [0, 5e8]},
-    #     'AMZN': {'sentiment': [0.65, 0.85], 'volume': [0, 6e8]},
-    #     'CRM': {'sentiment': [0.7, 0.9], 'volume': [0, 1e7]}, 
-    #     'DIS': {'sentiment': [0.5, 0.8], 'volume': [0, 6e7]},
-    #     'GOOG': {'sentiment': [0.6, 0.8], 'volume': [0, 1.5e8]},
-    #     'KO': {'sentiment': [0.6, 0.8], 'volume': [0, 6e7]},
-    #     'MSFT': {'sentiment': [0.6, 0.9], 'volume': [0, 1.5e8]}, 
-    #     'TSLA': {'sentiment': [0.5, 0.8], 'volume': [0, 8e8]},
-    #     'BA': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
-    #     'BX': {'sentiment': [0.6, 0.9], 'volume': [0, 2e7]},
-    #     'NOC': {'sentiment': [0.6, 0.9], 'volume': [0, 6e6]},
-    #     'NFLX': {'sentiment': [0.5, 0.8], 'volume': [0, 5e7]},
-    #     'TSM': {'sentiment': [0.7, 0.9], 'volume': [0, 5e7]},
-    #     'META': {'sentiment': [0.8, 0.95], 'volume': [0, 1.5e8]},
-    #     'PYPL': {'sentiment': [0.6, 0.9], 'volume': [0, 4e7]},
-    #     'PG': {'sentiment': [0.6, 0.8], 'volume': [0, 5e7]},
-    #     'ZS': {'sentiment': [0.6, 0.9], 'volume': [0, 1e7]},
-    #     'NIO': {'sentiment': [0.7, 0.9], 'volume': [0, 6e8]},
-    # }
-    
-    # try:
-        
-    #     fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['sentiment'], row=3, col=1)
-    #     fig.update_yaxes(tickmode='array', tickvals=company_dct[company]['volume'], row=4, col=1)
-    #     fig.update_yaxes(range=company_dct[company]['volume'], secondary_y=False, row=4, col=1)
-        
-    # except:
-    #     pass
     
     fig.update_layout(
-    # width=500,
-    # height=850,
-    showlegend=False,
-    hovermode='x unified', 
-    template='plotly_white',
-    legend=dict(
-        x=0,
-        y=1.05,
-        traceorder="normal",
-        font=dict(
-            family="sans-serif",
-            size=12,
-            color="black"
-        )),
+        showlegend=False,
+        hovermode='x unified',
+        template='plotly_white',
+        legend=dict(
+            x=0,
+            y=1.05,
+            traceorder="normal",
+            font=dict(
+                family="sans-serif",
+                size=12,
+                color="black"
+            )
+        ),
     )
-    fig.update_traces(xaxis='x1')
+    fig.update_traces(xaxis='x4')
     return fig
-
 
 
 # callback for tab2
@@ -275,12 +232,8 @@ def plot_wordcloud(company):
         # change this when you're done with testing
         company = 'AAPL'
 
-    df_comp = cleaned_df[cleaned_df['company'] == company]
-    # filter by sentiments
-    df_comp_bull = df_comp[df_comp['sentiment'] == 1]
-    df_comp_bear = df_comp[df_comp['sentiment'] == 0] 
-    text_bull = ' '.join(i for i in df_comp_bull['body'])
-    text_bear = ' '.join(i for i in df_comp_bear['body'])
+    text_bull = wordcloud_df[f'{company}_bull'].dropna().to_dict()
+    text_bear = wordcloud_df[f'{company}_bear'].dropna().to_dict()
 
     # Load the two images and convert them to numpy arrays
     mask1 = np.array(Image.open('../logos/bull.png'))
@@ -291,21 +244,40 @@ def plot_wordcloud(company):
     wc2 = WordCloud(background_color='white', mask=mask2)
 
     # Generate the word clouds
-    wc1.generate(text_bull)
-    wc2.generate(text_bear)
+    wc1.generate_from_frequencies(text_bull)
+    wc2.generate_from_frequencies(text_bear)
+    
+    # defining function for color func
+    def hsl_color_func(word, font_size, position, orientation, random_state = None, **kwargs):
+        return(hsl_val % np.random.randint(0,100))
+    
+    # change color for bear
+    color = 'xkcd:blood red'
+    r,g,b = colors.to_rgb(color)
+    h,l,s = colorsys.rgb_to_hls(r,g,b)
+    hsl_val = 'hsl(' + str(h*360) + ', 75%%, %d%%)'
+    color_bear = hsl_color_func
+    wc2.recolor(color_func=color_bear)
 
     # Combine the two images side by side
     combined_width = mask1.shape[1] + mask2.shape[1]
     combined_height = max(mask1.shape[0], mask2.shape[0])
 
     combined_image = Image.new('RGB', (combined_width, combined_height), color='white')
-    combined_image.paste(Image.fromarray(wc1.to_array()), (0, 0))
+    combined_image.paste(Image.fromarray(wc1.to_array()), (0, 100))
     combined_image.paste(Image.fromarray(wc2.to_array()), (mask1.shape[1], 0))
+    
+    draw = ImageDraw.Draw(combined_image)
+    font = ImageFont.truetype('Arial.ttf', size=50)
+
+    draw.text((700, combined_height-75), 'Bulls', fill='black', font=font)
+    draw.text((mask1.shape[1]+750, combined_height-75), 'Bears', fill='black', font=font)
 
     img = BytesIO()
     combined_image.save(img, format='PNG')
 
     return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
+    # return combined_image
 
 
 for topic in topics:

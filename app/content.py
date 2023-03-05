@@ -17,11 +17,11 @@ tab1 = dbc.Tab(label="Stocks", children=[
                 ]),
             dbc.Col(
                 [
-                    dcc.Graph(id='line-chart', style={'margin-top': '-30px', 'height': 600}),#'width': '80vh', 'height': 1100}),
+                    dcc.Graph(id='line-chart', style={'margin-top': '-30px', 'height': 600}),
                 ],
                 width = 12
-            # dcc.Graph(id='scatter-chart')
             ),
+            dbc.Col([wordCloud]),
         ])
 
 #####################
@@ -45,13 +45,7 @@ tab3 = dbc.Tab(id='topic_tab', label="Sentiment Topics", children=[
         dbc.Col([
             topic_title, *sent_topics,
         ], width=12),
-        # dbc.Col([
-        #     topics, topics,
-        # ], width=3)
     ])
-#     html.Div(
-#     [html.Button("Download Text", id="btn_txt"), dcc.Download(id="download-text-index")]
-# )
 ])
 
 #####################
@@ -63,12 +57,8 @@ tab4 = dbc.Tab(label="Table", children=[
 
 # change active tab when done testing
 tabs = dbc.Card(
-    dbc.Tabs([tab3, tab2, tab1, tab4])
+    dbc.Tabs([tab2, tab1, tab3, tab4])
     )
-
-
-
-
 
 ########################
 ####### home tab #######
@@ -93,9 +83,9 @@ app_layout = dbc.Container(
                 #         # ThemeChangerAIO(aio_id="theme"),
                 #         dbc.Row(
                 #             [
-                                dbc.Col(
-                                    [wordCloud_bull]#, wordCloud_bear]
-                                ),
+                                # dbc.Col(
+                                #     [wordCloud]
+                                # ),
                 #             ]
                 #         ),
                 #     ],
