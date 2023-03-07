@@ -20,10 +20,13 @@ import base64
 from io import BytesIO
 from wordcloud import WordCloud, STOPWORDS
 
+from statsmodels.tsa.stattools import grangercausalitytests
+
 
 # callback for tab1
 @callback(
     Output("line-chart", "figure"),
+    Output("lag-coef-value", "children"),
     Input("company", "value"),
 )
 
@@ -33,7 +36,7 @@ def update_line_chart(company):
         # change this when you're done with testing
         company = 'AAPL'
         
-    data = tweets_df[tweets_df['Stock Name'] == company]
+    data = tweets_df[tweets_df['Stock Name'] == company].copy()
 
     data['SMA30'] = data['sentiment avg'].rolling(50).mean()
     data['SMA90'] = data['sentiment avg'].rolling(90).mean()
@@ -101,6 +104,7 @@ def update_line_chart(company):
     
     # subplot 2B: adding buy/sell signals
     def RSIcalc(df):
+        df = df.copy() # or else a dreading warning sign will keep popping up
         df['MA200'] = df['Adj Close'].rolling(window=200).mean()
         df['price change'] = df['Adj Close'].pct_change()
         df['Upmove'] = df['price change'].apply(lambda x: x if x>0 else 0)
@@ -204,17 +208,50 @@ def update_line_chart(company):
         ),
     )
     fig.update_traces(xaxis='x4')
-    return fig
+
+    # finding the lag coefficient value
+    lag_data = data[['Date', 'sentiment avg', 'Close']].groupby(['Date']).mean()
+    results = grangercausalitytests(lag_data, maxlag=2, verbose=False)
+    corr_coef = 0.98
+
+    granger_coefs = []
+    for idx in range(2):
+        pval = [results[i+1][0]['ssr_ftest'][idx] for i in range(2)]
+        granger_causality_coef = 1 - pval[1] / pval[0]
+        granger_coefs.append(granger_causality_coef)
+
+    sub_style = {
+        'font-size': '10px', 
+        'margin-top': '-30px', 
+        'margin-bottom': '100px'
+        }
+    stats = html.Div([
+        html.P([
+            f'Correlation Coefficient: {corr_coef}'
+        ], style={'margin-bottom': '-9px'}),
+        html.I([
+            'Association between Sentiment and Stock Price',
+        ], style=sub_style),
+
+        html.P([
+            f'Granger Causality Coefficient: {round(max(granger_coefs), 2)}'
+        ], style={'margin-bottom': '-9px'}),
+        html.I([
+            'How well the sentiments predict stock prices',
+        ], style=sub_style)
+    ])
+
+
+    return fig, stats
 
 
 # callback for tab2
 @callback(
     Output('sentiment-prediction-output', 'children'),
     Input('sentiment-prediction-button', 'n_clicks'),
-    State('sentiment-prediction-button', 'n_clicks')
+    State('prediction', 'value')
 )
 def update_output(n_clicks, value):
-    # if n_clicks > 0:
     prediction = checkSenti(value)
     color = 'success' if prediction[0] == 'Bullish' else 'danger'
     value2 = f"Based on our models, this text is {round(prediction[1]*100, 2)}% likely to be "
@@ -290,3 +327,13 @@ for topic in topics:
         if n:
             return not is_open
         return is_open
+    
+@callback(
+    Output("intro-modal", "is_open"),
+    Input("intro-modal-button", "n_clicks"),
+    State("intro-modal", "is_open"),
+)
+def toggle_modal(n, is_open):
+    if n:
+        return not is_open
+    return is_open

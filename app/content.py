@@ -7,27 +7,52 @@ from globals import *
 ####### tab 1 #######
 #####################
 tab1 = dbc.Tab(label="Stocks", children=[
+    intro_message,
             dbc.Row([
-                dbc.Col(
-                        [], width=9
+                dbc.Col([
+                            # html.I(
+                            #     'Statistics',
+                            #     style={'font-size': '12px'}
+                            # ),
+                            popovers
+                         ],
+                        width={"size": 2, "offset": 7},
+                        style = {
+                            'margin-bottom': '25px', 
+                            # 'margin-top': '-5px'
+                        }
                     ),
-                dbc.Col(
-                        [dropdown], width=3
+                dbc.Col([
+                            html.I(
+                                'Select Company',
+                                style={'font-size': '12px'}
+                            ),
+                            dropdown
+                        ], 
+                        width={"size": 3, "offset": 0},
+                        style = {
+                            'margin-bottom': '25px', 
+                            # 'margin-top': '-5px'
+                        }
                         ),
-                ]),
-            dbc.Col(
-                [
-                    dcc.Graph(id='line-chart', style={'margin-top': '-30px', 'height': 600}),
-                ],
-                width = 12
-            ),
+                
+            # dbc.Col(
+            #     [
+                    dcc.Graph(
+                        id='line-chart', 
+                        style={'margin-top': '-30px', 'height': 800}),
+            #     ],
+            #     width = 12
+            # ),
+            ]),
             dbc.Col([wordCloud]),
         ])
 
 #####################
 ####### tab 2 #######
 #####################
-tab2 = dbc.Tab(html.Div([
+tab2 = dbc.Tab(
+    html.Div([
     dcc.Textarea(
         id='prediction',
         value="Hell yeahhh ~ I'm feeling extra bullish today.\nLooks like them stock prices are shooting to the moon 😍",
@@ -57,7 +82,7 @@ tab4 = dbc.Tab(label="Table", children=[
 
 # change active tab when done testing
 tabs = dbc.Card(
-    dbc.Tabs([tab2, tab1, tab3, tab4])
+    dbc.Tabs([tab1, tab2, tab3, tab4])
     )
 
 ########################
@@ -68,30 +93,11 @@ app_layout = dbc.Container(
         
         dbc.Row(
             [
-                # dbc.Col(
-                #     [nav_menu], width=9
-                # ),
                 dbc.Col(
                     
                     [tabs], width=12
                     ),
-                # dbc.Col(
-                #     [
-                #         controls,
-                #         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                #         # When running this app locally, un-comment this line:
-                #         # ThemeChangerAIO(aio_id="theme"),
-                #         dbc.Row(
-                #             [
-                                # dbc.Col(
-                                #     [wordCloud]
-                                # ),
-                #             ]
-                #         ),
-                #     ],
-                #     width=3,
-                # ),
-                # dbc.Col([tabs, colors], width=8),
+# ThemeChangerAIO(aio_id="theme")
             ]
         ),
         

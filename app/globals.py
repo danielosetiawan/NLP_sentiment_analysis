@@ -238,8 +238,6 @@ sent_topics = [
 
 
 
-
-
 table = html.Div(
     dash_table.DataTable(
         id="table",
@@ -255,17 +253,114 @@ table = html.Div(
     ), className="dbc-row-selectable",
 )
 
+jumbotron = html.Div(
+    dbc.Container(
+        [
+            html.H1("NLP Analysis", className="display-3"),
+            html.P(
+                'Data observed in this page utilizes a semi-supervised learning approach '
+                'The initial training involved labeled targets and incorporated the BERT model, '
+                'which itself was trained on a vast corpus of textual data. The ultimate testing '
+                'phase involved evaluating the trained data on a diverse range of Twitter tweets '
+                'that were scraped from various topics. These results were then compared against '
+                'real-world data to assess the accuracy of the approach.',
+                className="lead",
+            ),
+            html.Hr(className="my-2"),
+            html.P(
+                " "
+                "larger container."
+            ),
+            html.P(
+                dbc.Button("Learn more", id='intro-modal-button', color="primary"), className="lead"
+            ),
+        ],
+        fluid=True,
+        className="py-3",
+    ),
+    className="p-3 bg-light rounded-3",
+)
+
+intro_message = dbc.Modal(
+            [
+                dbc.ModalHeader(dbc.ModalTitle("A message for our viewers")),
+                dbc.ModalBody(jumbotron),
+            ],
+            id="intro-modal",
+            size="xl",
+            # is_open=True,
+        )
+
+slider = html.Div(
+    [
+        # dbc.Label("Select Years"),
+        html.I(
+            'Years',
+            style={'font-size': '12px'}
+        ),
+        dcc.RangeSlider(
+            tweets_df.Date.dt.year.min(),
+            tweets_df.Date.dt.year.max(),
+            1,
+            id="years",
+            marks=None,
+            tooltip={"placement": "bottom", "always_visible": True},
+            value=[2017, 2020],
+            className="p-0",
+        ),
+    ],
+    className="mb-4",
+)
+
 dropdown = html.Div(
     [
-        dbc.Label("Select Company", style={'top': '-20px'}),
         dcc.Dropdown(
             options=tweets_df['Stock Name'].unique(),
             value='All',
             id="company",
             clearable=False,
-            style={'position': 'relative', 'top': '-10px', 'left': '-20px'}
+            style={
+                'position': 'relative', 
+                'width': '200px'
+            }
         ),
     ], className="mb-4",
+)
+
+popovers = html.Div(
+    [
+        dbc.Button(
+            "stats",
+            id="stock-stats",
+            n_clicks=0,
+            style={
+                'margin-left': '60px', 
+                'margin-top': '15px', 
+                'line-height': '30px',
+                'width': '90px', 
+                'font-size': '13px',
+                'textAlign': 'top',
+            },
+            color='info',
+        ),
+        dbc.Popover(
+            [
+                dbc.PopoverHeader(slider),
+                dbc.PopoverBody([
+                    # html.P(id='lag-coef-value',
+                    #     'Lag Coefficient: ',
+                    # ),
+                    html.P(id='lag-coef-value'),
+                ]),
+                
+            ], style={
+                'width': '500px',
+            },
+            target="stock-stats",
+            trigger="hover",
+            placement='bottom'
+        ),
+    ]
 )
 
 # checklist = html.Div(
@@ -281,22 +376,7 @@ dropdown = html.Div(
 #     className="mb-4",
 # )
 
-# slider = html.Div(
-#     [
-#         dbc.Label("Select Years"),
-#         dcc.RangeSlider(
-#             stocks_df.Date.dt.year.min(),
-#             stocks_df.Date.dt.year.max(),
-#             1,
-#             id="years",
-#             marks=None,
-#             tooltip={"placement": "bottom", "always_visible": True},
-#             value=[2017, 2020],
-#             className="p-0",
-#         ),
-#     ],
-#     className="mb-4",
-# )
+
 
 controls = dbc.Card(
     [dropdown],#, checklist],#, slider],
@@ -306,3 +386,39 @@ controls = dbc.Card(
 
 wordCloud = dbc.Card([html.Img(id="wordcloud")])
 
+about_card = dbc.Card(
+    [
+        dbc.Row(
+            [
+                dbc.Col(
+                    dbc.CardImg(
+                        src="daniel.jpeg",
+                        # className="img-fluid rounded-start",
+                    ),
+                    className="col-md-4",
+                ),
+                dbc.Col(
+                    dbc.CardBody(
+                        [
+                            html.H4("Card title", className="card-title"),
+                            html.P(
+                                "This is a wider card with supporting text "
+                                "below as a natural lead-in to additional "
+                                "content. This content is a bit longer.",
+                                className="card-text",
+                            ),
+                            html.Small(
+                                "Last updated 3 mins ago",
+                                className="card-text text-muted",
+                            ),
+                        ]
+                    ),
+                    className="col-md-8",
+                ),
+            ],
+            className="g-0 d-flex align-items-center",
+        )
+    ],
+    className="mb-3",
+    style={"maxWidth": "540px"},
+)

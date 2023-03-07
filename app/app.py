@@ -85,7 +85,7 @@ def render_page_content(pathname):
     elif pathname == "/calendar":
         return html.P("This is your calendar... not much in the diary...")
     elif pathname == "/messages":
-        return html.P("Here are all your messages")
+        return about_card
     # If the user tries to reach a different page, return a 404 message
     return html.Div(
         [
