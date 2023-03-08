@@ -54,13 +54,14 @@ tab1 = dbc.Tab(label="Stocks", children=[
 tab2 = dbc.Tab(
     dbc.Row([
     dbc.Col([
+        html.I('Sentiment Prediction Box'),
         sent_pred, 
         dbc.Col(dbc.Card(pred_summary, color="primary", outline=True), 
 ),
         ], 
         width={'size': 4}, 
         style={
-            'margin-top': '20px',
+            'margin-top': '30px',
             'margin-left': '20px'}
     ),
     dbc.Col([
@@ -98,7 +99,7 @@ tab4 = dbc.Tab(label="Table", children=[
 
 # change active tab when done testing
 tabs = dbc.Card(
-    dbc.Tabs([tab1, tab2, tab3, tab4])
+    dbc.Tabs([tab3, tab2, tab1, tab4])
     )
 
 ########################

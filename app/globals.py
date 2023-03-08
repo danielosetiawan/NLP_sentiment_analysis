@@ -11,6 +11,7 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 from scipy.stats import pearsonr
 # import dash_icons as fas
+from statsmodels.tsa.stattools import grangercausalitytests
 
 # icon
 # header = html.H4(
@@ -189,25 +190,43 @@ def topic_data(topic):
     def correlation_coeff(col1, col2):
             corr, pvalue = pearsonr(col1, col2)
             return round(corr, 2)
+    
+    def topic_granger_causality(topic, comparison_data):
+        coefs = []
+
+        data = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean()
+        data = data.dropna(how='all').fillna(method='ffill').dropna()
+        results = grangercausalitytests(data, maxlag=2, verbose=False)
+
+        for idx in range(2):
+            pval = [results[i+1][0]['ssr_ftest'][idx] for i in range(2)]
+            granger_causality_coef = 1 - pval[1] / pval[0]
+            coefs.append(granger_causality_coef)
+            
+        return f'{round(max(coefs), 2):.2f}'
         
-    corr1 = correlation_coeff(data_inter['IRS Tax'], data_inter['taxes_sentiment'])
-    topic_dct['taxes']['corr'] = corr1
-    corr2 = correlation_coeff(data_inter['bank_loan'], data_inter['loans_sentiment'])
-    topic_dct['loans']['corr'] = corr2
-    corr3 = correlation_coeff(data_inter['inflation'], data_inter['inflation_sentiment'])
-    topic_dct['inflation']['corr'] = corr3
-    corr4 = correlation_coeff(data_inter['total_debt'], data_inter['recession_sentiment'])
-    topic_dct['recession']['corr'] = corr4
-    corr5 = correlation_coeff(data_inter['bonds_issued'], data_inter['bonds_sentiment'])
-    topic_dct['bonds']['corr'] = corr5
-    corr6 = correlation_coeff(data_inter['GDP'], data_inter['economy_sentiment'])
-    topic_dct['economy']['corr'] = corr6
-    corr7 = correlation_coeff(data_inter['unemployment_rate'], data_inter['unemployment_sentiment'])
-    topic_dct['unemployment']['corr'] = corr7
-    corr8 = correlation_coeff(data_inter['mortgage_rates'], data_inter['housing_market_sentiment'])
-    topic_dct['housing_market']['corr'] = corr8
-    corr9 = correlation_coeff(data_inter['federal_funds'], data_inter['interest_rates_sentiment'])
-    topic_dct['interest_rates']['corr'] = corr9
+    # corr1 = correlation_coeff(data_inter['IRS Tax'], data_inter['taxes_sentiment'])
+    # topic_dct['taxes']['corr'] = corr1
+
+    topic_dct[topic]['corr1'] = topic_granger_causality(topic, topic_dct[topic]['data'][0])
+    topic_dct[topic]['corr2'] = topic_granger_causality(topic, topic_dct[topic]['data'][1])
+
+    # corr2 = correlation_coeff(data_inter['bank_loan'], data_inter['loans_sentiment'])
+    # topic_dct['loans']['corr'] = corr2
+    # corr3 = correlation_coeff(data_inter['inflation'], data_inter['inflation_sentiment'])
+    # topic_dct['inflation']['corr'] = corr3
+    # corr4 = correlation_coeff(data_inter['total_debt'], data_inter['recession_sentiment'])
+    # topic_dct['recession']['corr'] = corr4
+    # corr5 = correlation_coeff(data_inter['bonds_issued'], data_inter['bonds_sentiment'])
+    # topic_dct['bonds']['corr'] = corr5
+    # corr6 = correlation_coeff(data_inter['GDP'], data_inter['economy_sentiment'])
+    # topic_dct['economy']['corr'] = corr6
+    # corr7 = correlation_coeff(data_inter['unemployment_rate'], data_inter['unemployment_sentiment'])
+    # topic_dct['unemployment']['corr'] = corr7
+    # corr8 = correlation_coeff(data_inter['mortgage_rates'], data_inter['housing_market_sentiment'])
+    # topic_dct['housing_market']['corr'] = corr8
+    # corr9 = correlation_coeff(data_inter['federal_funds'], data_inter['interest_rates_sentiment'])
+    # topic_dct['interest_rates']['corr'] = corr9
 
     return dbc.Card(
         dbc.CardBody([
@@ -225,7 +244,11 @@ def topic_data(topic):
                 dbc.Col(modal_fig, width=2),
                 dbc.Col([
                     html.I([
-                        f'{topic_dct[topic]["corr"]}',
+                        f'{topic_dct[topic]["name"][0]}: ',
+                        f'{topic_dct[topic]["corr1"]}',
+                        html.Br(),
+                        f'{topic_dct[topic]["name"][1]}: ',
+                        f'{topic_dct[topic]["corr2"]}',
                     ])
                     ], width=2)
                     ])
@@ -326,7 +349,7 @@ intro_message = dbc.Modal(
             ],
             id="intro-modal",
             size="xl",
-            # is_open=True,
+            is_open=True,
         )
 
 # slider = html.Div(
