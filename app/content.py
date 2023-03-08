@@ -35,15 +35,11 @@ tab1 = dbc.Tab(label="Stocks", children=[
                             # 'margin-top': '-5px'
                         }
                         ),
-                
-            # dbc.Col(
-            #     [
-                    dcc.Graph(
-                        id='line-chart', 
-                        style={'margin-top': '-30px', 'height': 800}),
-            #     ],
-            #     width = 12
-            # ),
+                stock_chart
+                    # dcc.Graph(
+                    #     id='line-chart', 
+                    #     style={'margin-top': '-30px', 'height': 800}
+                    #     ),
             ]),
             dbc.Col([wordCloud]),
         ])
@@ -52,15 +48,31 @@ tab1 = dbc.Tab(label="Stocks", children=[
 ####### tab 2 #######
 #####################
 tab2 = dbc.Tab(
-    html.Div([
-    dcc.Textarea(
-        id='prediction',
-        value="Hell yeahhh ~ I'm feeling extra bullish today.\nLooks like them stock prices are shooting to the moon 😍",
-        style={'width': '100%', 'height': 200},
+    dbc.Row([
+    dbc.Col([
+        sent_pred, 
+        dbc.Col(dbc.Card(pred_summary, color="primary", outline=True), 
+),
+        ], 
+        width={'size': 4}, 
+        style={
+            'margin-top': '20px',
+            'margin-left': '20px'}
     ),
-    html.Button('Classify Text', id='sentiment-prediction-button', n_clicks=0),
-    html.Div(id='sentiment-prediction-output', style={'whiteSpace': 'pre-line'})
-]), label="Sentiment Prediction")
+    dbc.Col([
+        dcc.Graph(
+            id='prediction-chart', 
+            style={'margin-top': '0px', 'height': 800, 
+                   'width': 1000}),
+        ], 
+        width={'size': 7}, 
+        style={
+            'margin-top': '0px',
+            'margin-left': '0px'}
+    ), 
+    ], className="g-0"),
+    
+    label="Sentiment Prediction")
 
 #####################
 ####### tab 3 #######

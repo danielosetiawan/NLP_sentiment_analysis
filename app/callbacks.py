@@ -254,9 +254,9 @@ def update_line_chart(company):
 def update_output(n_clicks, value):
     prediction = checkSenti(value)
     color = 'success' if prediction[0] == 'Bullish' else 'danger'
-    value2 = f"Based on our models, this text is {round(prediction[1]*100, 2)}% likely to be "
+    value = f"Based on our models, this text is {round(prediction[1]*100, 2)}% likely to be "
 
-    return dbc.Alert([value2, html.B(prediction[0], className="alert-heading"), '.'], color=color),
+    return dbc.Alert([value, html.B(prediction[0], className="alert-heading"), '.'], color=color),
 
 
 # callback for word cloud
@@ -337,3 +337,93 @@ def toggle_modal(n, is_open):
     if n:
         return not is_open
     return is_open
+
+
+@callback(
+    Output('prediction-chart', 'figure'),
+    Input('sentiment-prediction-button', 'n_clicks'),
+    State('prediction', 'value')
+)
+def final_sentpredict(n_clicks, text):
+    sent_txt = []
+    sent_val = []
+    sent_clr = []
+    rounded = []
+    txt_color = []
+    
+    def predict_color(value, label):
+        if label == 'Bearish':
+            return 1-value, 'red', 'white'
+        else:
+            return value, 'green', 'white'
+        
+    for txt in text.split(' '):
+        
+        # assigning variable and color
+        label, value = checkSenti(txt)
+        value, color, color2 = predict_color(value, label)
+        txt_color.append(color2)
+        
+        # splitting up each word and making it proper
+        sent_txt.append(txt.capitalize())
+        
+        # setting the bar colors
+        sent_clr.append(color)
+        
+        # appending value and rounding it
+        sent_val.append(value)
+        rounded.append(round(float(value), 2))
+    
+    # finding the weight of the composition
+    comp_weight = value - np.mean(sent_val)
+    
+    # append to list
+    sent_txt.append('Composition Weight')
+    sent_val.append(comp_weight)
+    sent_clr.append('orange')
+    txt_color.append('black')
+    rounded.append(round(comp_weight, 2))
+        
+    # create and return df
+    df = pd.DataFrame({
+        'text': sent_txt, 'value': sent_val, 
+        'color': sent_clr, 'rounded': rounded,
+        'txt_color': txt_color
+    }).sort_values('value', ascending=False)
+    
+    # plotting
+    trace = go.Bar(
+        x=df.value,
+        y=df.text,
+        orientation='h',
+        text = [f'{l} | {r}' for l, r in zip(df.text, df.rounded)],
+        textfont=dict(
+            color=df.txt_color,
+            size=10,
+            ),
+        marker=dict(
+            color=df.color
+        )
+    )
+
+    layout = go.Layout(
+        title='Sentiment Weight of each word',
+        template='simple_white',
+        xaxis=dict(title='Weight'),
+        yaxis=dict(ticktext=[], tickvals=[])
+    )
+
+    fig = go.Figure(trace, layout)
+    
+    return fig
+
+
+# @callback(
+#     Output("page-content", "children"), 
+#     Input("url", "pathname")
+# )
+# def render_stocktab(tab):
+#     if tab == 'tab1':
+#         return tab1_content
+#     elif tab == 'tab2':
+#         return tab2_content

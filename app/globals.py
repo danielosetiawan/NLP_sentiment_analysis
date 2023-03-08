@@ -376,15 +376,46 @@ popovers = html.Div(
 #     className="mb-4",
 # )
 
-
+sent_pred = html.Div([
+        dcc.Textarea(
+            id='prediction',
+            value="Hell yeahhh ~ I'm feeling extra bullish today. \nLooks like them stock prices are shooting to the moon 😍",
+            style={'width': '100%', 'height': 200},
+        ),
+        html.Button('Classify Text', id='sentiment-prediction-button', n_clicks=0),
+        html.Div(id='sentiment-prediction-output', style={'whiteSpace': 'pre-line'})
+    ])
 
 controls = dbc.Card(
     [dropdown],#, checklist],#, slider],
     body=True,
 )
 
-
-wordCloud = dbc.Card([html.Img(id="wordcloud")])
+pred_summary = [
+    dbc.CardHeader("Prediction Summary"),
+    dbc.CardBody(
+        [
+            html.Div([
+                html.Br(),
+                'Test Accuracy: 0.8893',
+                html.Br(),
+                'Support Vector: 8626',
+                html.Br(),
+                'Training Loss: 0.124',
+                html.Br(),
+                'Corpus: 5M+ StockTwits Data',
+                html.Br(),
+                html.Br(),
+                html.Br(),
+                html.I(
+                    'Note: Composition Weight is the weight of the combined sentence.',
+                    className="card-title"
+                    ),
+                html.Br(),
+            ])
+        ], style={'height': 300}
+    ), 
+]
 
 about_card = dbc.Card(
     [
@@ -422,3 +453,27 @@ about_card = dbc.Card(
     className="mb-3",
     style={"maxWidth": "540px"},
 )
+
+wordCloud = dbc.Card([html.Img(id="wordcloud")])
+
+stock_chart = html.Div([
+    dcc.Graph(
+        id='line-chart', 
+        style={'margin-top': '-30px', 'height': 800}
+    ),
+])
+
+stock_tabs = dcc.Tabs(
+    id='stock-tabs',
+    value='stock-chart',
+    children=[
+        dcc.Tab(label='Stock vs. Sentiment', value='stock-chart'),
+        dcc.Tab(label='Wordcloud', value='wcloud'),
+    ],
+    vertical=True, # set tabs to vertical
+)
+
+# app.layout = html.Div([
+#                     stock_tabs,
+#                     html.Div(id='tab-content')
+#                 ])
