@@ -7,6 +7,9 @@ from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import pandas as pd
+pd.options.mode.chained_assignment = None
+from scipy.stats import pearsonr
 # import dash_icons as fas
 
 # icon
@@ -129,6 +132,7 @@ def topic_data(topic):
         market_data['yaxis_title'], ['y1', 'y2'], [True, False]
     )
     
+        
     for dta, name, color, ax_title, axis, secondY in topic_info:
         fig.add_trace(go.Scatter(
             x=data.Date,
@@ -144,7 +148,8 @@ def topic_data(topic):
             secondary_y=secondY,
             row=2, col=1
         )
-    
+        
+        
     fig.update_layout(
         hovermode='x unified',
         template='plotly_white',
@@ -179,6 +184,31 @@ def topic_data(topic):
         ]
     )
 
+    data_inter = data.interpolate()
+    data_inter = data_inter.fillna(method='bfill')
+    def correlation_coeff(col1, col2):
+            corr, pvalue = pearsonr(col1, col2)
+            return round(corr, 2)
+        
+    corr1 = correlation_coeff(data_inter['IRS Tax'], data_inter['taxes_sentiment'])
+    topic_dct['taxes']['corr'] = corr1
+    corr2 = correlation_coeff(data_inter['bank_loan'], data_inter['loans_sentiment'])
+    topic_dct['loans']['corr'] = corr2
+    corr3 = correlation_coeff(data_inter['inflation'], data_inter['inflation_sentiment'])
+    topic_dct['inflation']['corr'] = corr3
+    corr4 = correlation_coeff(data_inter['total_debt'], data_inter['recession_sentiment'])
+    topic_dct['recession']['corr'] = corr4
+    corr5 = correlation_coeff(data_inter['bonds_issued'], data_inter['bonds_sentiment'])
+    topic_dct['bonds']['corr'] = corr5
+    corr6 = correlation_coeff(data_inter['GDP'], data_inter['economy_sentiment'])
+    topic_dct['economy']['corr'] = corr6
+    corr7 = correlation_coeff(data_inter['unemployment_rate'], data_inter['unemployment_sentiment'])
+    topic_dct['unemployment']['corr'] = corr7
+    corr8 = correlation_coeff(data_inter['mortgage_rates'], data_inter['housing_market_sentiment'])
+    topic_dct['housing_market']['corr'] = corr8
+    corr9 = correlation_coeff(data_inter['federal_funds'], data_inter['interest_rates_sentiment'])
+    topic_dct['interest_rates']['corr'] = corr9
+
     return dbc.Card(
         dbc.CardBody([
             dbc.Row([
@@ -188,14 +218,20 @@ def topic_data(topic):
                         html.I(className="fa fa-dollar", 
                             style={'font-size': '1rem'}),
                     ])
-                ], width = 4),
+                ], width = 2),
                 dbc.Col([*volume], style = {'margin-left': '-5px'}),
                 dbc.Col([*sentiment], width=2),
                 dbc.Col([trajectory], width=2),
                 dbc.Col(modal_fig, width=2),
+                dbc.Col([
+                    html.I([
+                        f'{topic_dct[topic]["corr"]}',
+                    ])
+                    ], width=2)
+                    ])
                 ], className='g-0')
-            ])
-        )
+            )
+
 
     
 topic_style = {
@@ -209,17 +245,20 @@ style2 = {'margin-top': '-5px', 'margin-bottom': '-30px',
 topic_title = dbc.Card(
         dbc.CardBody([
             dbc.Row([
-                dbc.Col([html.H4('Topic')], style = style, width = 4),
+                dbc.Col([html.H4('Topic')], style = style, width = 2),
                 dbc.Col([html.H4('Mentions')], style = style, width = 2),
                 dbc.Col([html.H4('Sentiment')], style = style, width = 2),
                 dbc.Col([html.H4('Direction')], style = style, width = 2),
                 dbc.Col([html.H4('Chart')], style = style, width = 2),
+                dbc.Col([html.H4('Correlation')], style = style, width = 2)
                 ], className='g-0'),
             dbc.Row([
-                dbc.Col([], style = style, width = 4),
+                dbc.Col([], style = style, width = 2),
                 dbc.Col([html.P('(past year)')], style = style2, width = 2),
                 dbc.Col([html.P('(past 7 days)')], style = style2, width = 2),
                 dbc.Col([html.P('(past 7 days)')], style = style2, width = 2),
+                dbc.Col([], style = style, width = 2),
+                dbc.Col([html.P('(topic and sentiment correlation)')], style = style2, width = 2),
                 ], className='g-0'),
             ])
         )
@@ -235,7 +274,6 @@ sent_topics = [
             topic_data('housing_market'),
             topic_data('interest_rates'),
             ]
-
 
 
 table = html.Div(
@@ -291,26 +329,26 @@ intro_message = dbc.Modal(
             # is_open=True,
         )
 
-slider = html.Div(
-    [
-        # dbc.Label("Select Years"),
-        html.I(
-            'Years',
-            style={'font-size': '12px'}
-        ),
-        dcc.RangeSlider(
-            tweets_df.Date.dt.year.min(),
-            tweets_df.Date.dt.year.max(),
-            1,
-            id="years",
-            marks=None,
-            tooltip={"placement": "bottom", "always_visible": True},
-            value=[2017, 2020],
-            className="p-0",
-        ),
-    ],
-    className="mb-4",
-)
+# slider = html.Div(
+#     [
+#         # dbc.Label("Select Years"),
+#         html.I(
+#             'Years',
+#             style={'font-size': '12px'}
+#         ),
+#         dcc.RangeSlider(
+#             tweets_df.Date.dt.year.min(),
+#             tweets_df.Date.dt.year.max(),
+#             1,
+#             id="years",
+#             marks=None,
+#             tooltip={"placement": "bottom", "always_visible": True},
+#             value=[2017, 2020],
+#             className="p-0",
+#         ),
+#     ],
+#     className="mb-4",
+# )
 
 dropdown = html.Div(
     [
@@ -345,7 +383,7 @@ popovers = html.Div(
         ),
         dbc.Popover(
             [
-                dbc.PopoverHeader(slider),
+                #dbc.PopoverHeader(slider),
                 dbc.PopoverBody([
                     # html.P(id='lag-coef-value',
                     #     'Lag Coefficient: ',

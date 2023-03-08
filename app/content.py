@@ -35,13 +35,17 @@ tab1 = dbc.Tab(label="Stocks", children=[
                             # 'margin-top': '-5px'
                         }
                         ),
-                stock_chart
-                    # dcc.Graph(
-                    #     id='line-chart', 
-                    #     style={'margin-top': '-30px', 'height': 800}
-                    #     ),
+                
+            # dbc.Col(
+            #     [
+                    dcc.Graph(
+                        id='line-chart', 
+                        style={'margin-top': '-30px', 'height': 1000}),
+            #     ],
+            #     width = 12
+            # ),
             ]),
-            dbc.Col([wordCloud]),
+            #dbc.Col([wordCloud]),
         ])
 
 #####################
