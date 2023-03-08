@@ -45,7 +45,7 @@ tab1 = dbc.Tab(label="Stocks", children=[
             #     width = 12
             # ),
             ]),
-            #dbc.Col([wordCloud]),
+            dbc.Col([wordCloud]),
         ])
 
 #####################

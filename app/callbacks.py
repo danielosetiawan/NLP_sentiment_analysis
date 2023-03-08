@@ -91,16 +91,37 @@ def update_line_chart(company):
                             line = dict(color = 'red', width=1), 
                             name='Long term'
                             ))
+    # get sell buy dates from sentiment crossover
+    new_data = pd.DataFrame()
+    for i in data['group'].unique():
+        intersect = data[data['group']==i].head(1)
+        new_data = pd.concat([new_data, intersect])  
+
+    buy_sent = new_data.index[new_data['label']==1]
+    sell_sent = new_data.index[new_data['label']==0]
+    if len(buy_sent) != len(sell_sent):
+        new_data = new_data.dropna()
+        buy_sent = new_data.index[new_data['label']==1]
+        sell_sent = new_data.index[new_data['label']==0]
+    
+    Profits_sent = (data.loc[sell_sent].Open.values - data.loc[buy_sent].Open.values)/data.loc[buy_sent].Open.values
+    wins_sent = [i for i in Profits_sent if i > 0]
+    # winning rate
+    winning_rate_sent = len(wins_sent)/len(Profits_sent)
 
 ######## subplot 2: stock ########
 
     # subplot 2A: stock price
-    price_trace = go.Candlestick(x=data['Date'],
-            open=data['Open'],
-            high=data['High'],
-            low=data['Low'],
-            close=data['Close'],
-            name="Candlestick")
+    price_trace = go.Scatter(x=data['Date'],
+        y = data['Adj Close'],
+        line = dict(color='darkblue'),
+        name="Adj Close")
+    # price_trace = go.Candlestick(x=data['Date'],
+    #         open=data['Open'],
+    #         high=data['High'],
+    #         low=data['Low'],
+    #         close=data['Close'],
+    #         name="Candlestick")
        
     # subplot 2B: adding buy/sell signals
     def RSIcalc(df):
@@ -158,15 +179,23 @@ def update_line_chart(company):
                               marker=dict(symbol='triangle-up', color='lightsteelblue'), 
                               mode = 'markers', name='Sell'
                             )
-    EMA12 = go.Scatter(x=frame['Date'],
-                                 y=frame['EMA-12'],
-                                 name='12-period EMA', 
-                                 line=dict(color='dodgerblue', width=1))
-    EMA26 = go.Scatter(x=frame['Date'],
-                                 y=frame['EMA-26'],
-                                 name='26-period EMA', 
-                                 line=dict(color='darkorange', width=1))
-    fig.add_traces([price_trace, buy_trace, sell_trace, EMA12, EMA26], rows=2, cols=1)
+    buy_trace_sent = go.Scatter(x=pd.to_datetime(data.loc[buy_sent]['Date']), y = data.loc[buy_sent]['Adj Close'],
+                              marker=dict(symbol='triangle-up', color='green'), 
+                              mode = 'markers', name='Buy_sent'
+                            )
+    sell_trace_sent = go.Scatter(x=pd.to_datetime(data.loc[sell_sent]['Date']), y = data.loc[sell_sent]['Adj Close'],
+                              marker=dict(symbol='triangle-up', color='red'), 
+                              mode = 'markers', name='Sell_sent'
+                            )
+    # EMA12 = go.Scatter(x=frame['Date'],
+    #                              y=frame['EMA-12'],
+    #                              name='12-period EMA', 
+    #                              line=dict(color='dodgerblue', width=1))
+    # EMA26 = go.Scatter(x=frame['Date'],
+    #                              y=frame['EMA-26'],
+    #                              name='26-period EMA', 
+    #                              line=dict(color='darkorange', width=1))
+    fig.add_traces([price_trace, buy_trace, sell_trace, buy_trace_sent, sell_trace_sent], rows=2, cols=1)
 
 ######## subplot 3: MACD ########
     frame['Hist-Color'] = np.where(frame['Histogram'] < 0, 'indianred', 'green')
@@ -274,13 +303,6 @@ def update_line_chart(company):
         }
     stats = html.Div([
         html.P([
-            f'Correlation Coefficient: {round(corr, 2)}'
-        ], style={'margin-bottom': '-10px'}),
-        html.I([
-            'Association between Sentiment and Stock Price',
-        ], style=sub_style),
-
-        html.P([
             f'Granger Causality Coefficient: {round(max(granger_coefs), 2)}'
         ], style={'margin-bottom': '-10px'}),
         html.I([
@@ -291,6 +313,12 @@ def update_line_chart(company):
         ], style={'margin-bottom': '-5px'}),
         html.I([
             'Profit rate for ticker over entire time range',
+        ], style=sub_style),
+        html.P([
+            f'Sentiment Strategy Win Rate: {round(winning_rate_sent, 2)}'
+        ], style={'margin-bottom': '-5px'}),
+        html.I([
+            'Profit rate for ticker from sentiment analysis',
         ], style=sub_style)
     ])
 
