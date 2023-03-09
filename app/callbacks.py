@@ -437,6 +437,7 @@ def final_sentpredict(n_clicks, text):
         else:
             return value, 'green', 'white'
         
+    # finding the individual sentiment of each word
     for txt in text.split(' '):
         
         # assigning variable and color
@@ -452,17 +453,18 @@ def final_sentpredict(n_clicks, text):
         
         # appending value and rounding it
         sent_val.append(value)
-        rounded.append(round(float(value), 2))
+        rounded.append(f'{value:.3f}')
     
     # finding the weight of the composition
-    comp_weight = value - np.mean(sent_val)
+    label, value = checkSenti(text)
+    comp_weight = predict_color(value, label)[0] - np.mean(sent_val)
     
     # append to list
     sent_txt.append('Composition Weight')
     sent_val.append(comp_weight)
     sent_clr.append('orange')
     txt_color.append('black')
-    rounded.append(round(comp_weight, 2))
+    rounded.append(f'{comp_weight:.3f}')
         
     # create and return df
     df = pd.DataFrame({

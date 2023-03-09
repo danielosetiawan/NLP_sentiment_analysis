@@ -33,8 +33,8 @@ sidebar = html.Div(
             [
                 # width: 3rem ensures the logo is the exact width of the
                 # collapsed sidebar (accounting for padding)
-                html.Img(src=PLOTLY_LOGO, style={"width": "3rem"}),
-                html.H2("Sidebar"),
+                html.Img(src=transform_image('img/sentiment.png'), style={"width": "3rem"}),
+                html.H2("NLP Dashboard"),
             ],
             className="sidebar-header",
         ),
@@ -50,18 +50,18 @@ sidebar = html.Div(
                 
                 dbc.NavLink(
                     [
-                        html.I(className="fas fa-calendar-alt me-2"),
-                        html.Span("Calendar"),
+                        html.I(className="fas fa-database me-2"),
+                        html.Span("Data"),
                     ],
-                    href="/calendar",
+                    href="/data",
                     active="exact",
                 ),
                 dbc.NavLink(
                     [
-                        html.I(className="fas fa-envelope-open-text me-2"),
-                        html.Span("Messages"),
+                        html.I(className="fas fa-question me-2"),
+                        html.Span("About"),
                     ],
-                    href="/messages",
+                    href="/about",
                     active="exact",
                 ),
             ],
@@ -85,10 +85,10 @@ app.layout = html.Div([dcc.Location(id="url"), sidebar, content])
 def render_page_content(pathname):
     if pathname == "/":
         return app_layout #dbc.Col([tabs, colors], width=8)
-    elif pathname == "/calendar":
-        return html.P("This is your calendar... not much in the diary...")
-    elif pathname == "/messages":
-        return about_card
+    elif pathname == "/data":
+        return table
+    elif pathname == "/about":
+        return jumbotron
     # If the user tries to reach a different page, return a 404 message
     return html.Div(
         [

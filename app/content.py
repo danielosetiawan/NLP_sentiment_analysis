@@ -38,9 +38,7 @@ tab1 = dbc.Tab(label="Stocks", children=[
                 
             # dbc.Col(
             #     [
-                    dcc.Graph(
-                        id='line-chart', 
-                        style={'margin-top': '-30px', 'height': 1000}),
+                    stock_chart,
             #     ],
             #     width = 12
             # ),
@@ -59,7 +57,7 @@ tab2 = dbc.Tab(
         dbc.Col(dbc.Card(pred_summary, color="primary", outline=True), 
 ),
         ], 
-        width={'size': 4}, 
+        width={'size': 3}, 
         style={
             'margin-top': '30px',
             'margin-left': '20px'}
@@ -70,7 +68,7 @@ tab2 = dbc.Tab(
             style={'margin-top': '0px', 'height': 800, 
                    'width': 1000}),
         ], 
-        width={'size': 7}, 
+        width={'size': 8}, 
         style={
             'margin-top': '0px',
             'margin-left': '0px'}
@@ -99,7 +97,7 @@ tab4 = dbc.Tab(label="Table", children=[
 
 # change active tab when done testing
 tabs = dbc.Card(
-    dbc.Tabs([tab3, tab2, tab1, tab4])
+    dbc.Tabs([tab1, tab2, tab3])
     )
 
 ########################

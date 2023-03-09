@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
+from dash import Dash, dcc, html, dash_table, Input, Output, State, callback, get_asset_url
 import dash_bootstrap_components as dbc
 from data import *
 # from dash_iconify import DashIconify
@@ -11,32 +11,24 @@ import pandas as pd
 pd.options.mode.chained_assignment = None
 from scipy.stats import pearsonr
 # import dash_icons as fas
+import base64
 from statsmodels.tsa.stattools import grangercausalitytests
 
-# icon
-# header = html.H4(
-#     "Sentiments NLP", className="bg-primary text-white p-2 mb-2 text-center"
-# )
+def transform_image(path):
+    img = base64.b64encode(open(path, 'rb').read()).decode('ascii')
+    return f'data:image/png;base64,{img}'
 
-# nav_menu = dbc.NavbarSimple(
-#     children=[
-#         dbc.NavItem(dbc.NavLink("Page 1", href="#")),
-#         dbc.DropdownMenu(
-#             children=[
-#                 dbc.DropdownMenuItem("More pages", header=True),
-#                 dbc.DropdownMenuItem("Page 2", href="#"),
-#                 dbc.DropdownMenuItem("Page 3", href="#"),
-#             ],
-#             nav=True,
-#             in_navbar=True,
-#             label="More",
-#         ),
-#     ],
-#     brand="NavbarSimple",
-#     brand_href="#",
-#     color="primary",
-#     dark=True,
-# )
+def create_logo(image, link):
+    return html.A(
+        href=link,
+        target="_blank",
+        children=[
+            html.Img(
+                src=transform_image(image),
+                style={"height": "30px", "width": "30px", "marginRight": "10px"},
+            ),
+        ],
+    )
 
 
 def topic_data(topic):
@@ -194,16 +186,25 @@ def topic_data(topic):
     def topic_granger_causality(topic, comparison_data):
         coefs = []
 
-        data = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean()
-        data = data.dropna(how='all').fillna(method='ffill').dropna()
-        results = grangercausalitytests(data, maxlag=2, verbose=False)
+        # data = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean().dropna()
+        # data = data.dropna(how='all').fillna(method='ffill').dropna()
 
-        for idx in range(2):
-            pval = [results[i+1][0]['ssr_ftest'][idx] for i in range(2)]
-            granger_causality_coef = 1 - pval[1] / pval[0]
-            coefs.append(granger_causality_coef)
-            
-        return f'{round(max(coefs), 2):.2f}'
+        try:
+            data1 = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean().dropna()
+            data2 = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean()
+            data2 = data2.dropna(how='all').fillna(method='ffill').dropna()
+
+            for data in [data1, data2]:
+                results = grangercausalitytests(data, maxlag=2, verbose=False)
+
+                for idx in range(2):
+                    pval = [results[i+1][0]['ssr_ftest'][idx] for i in range(2)]
+                    granger_causality_coef = 1 - pval[1] / pval[0]
+                    coefs.append(granger_causality_coef)
+                
+            return f'{round(max(coefs), 2):.2f}'
+        except:
+            return 'N/A'
         
     # corr1 = correlation_coeff(data_inter['IRS Tax'], data_inter['taxes_sentiment'])
     # topic_dct['taxes']['corr'] = corr1
@@ -228,14 +229,27 @@ def topic_data(topic):
     # corr9 = correlation_coeff(data_inter['federal_funds'], data_inter['interest_rates_sentiment'])
     # topic_dct['interest_rates']['corr'] = corr9
 
+    def topic_logo():
+        return html.A(
+            target="_blank",
+            children=[
+                html.Img(
+                    src=transform_image(topic_dct[topic]['logo_path']),
+                    style={"height": "30px", "width": "30px", "marginRight": "10px"},
+                ),
+            ],
+        )
+
     return dbc.Card(
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
                     html.H5([
                         f'{topic_dct[topic]["title"]} ',
-                        html.I(className="fa fa-dollar", 
-                            style={'font-size': '1rem'}),
+                        html.Br(),
+                        topic_logo()
+                        # html.I(className="fa fa-dollar", 
+                            # style={'font-size': '1rem'}),
                     ])
                 ], width = 2),
                 dbc.Col([*volume], style = {'margin-left': '-5px'}),
@@ -254,7 +268,6 @@ def topic_data(topic):
                     ])
                 ], className='g-0')
             )
-
 
     
 topic_style = {
@@ -314,7 +327,7 @@ table = html.Div(
     ), className="dbc-row-selectable",
 )
 
-jumbotron = html.Div(
+info_msg = html.Div(
     dbc.Container(
         [
             html.H1("NLP Analysis", className="display-3"),
@@ -345,11 +358,11 @@ jumbotron = html.Div(
 intro_message = dbc.Modal(
             [
                 dbc.ModalHeader(dbc.ModalTitle("A message for our viewers")),
-                dbc.ModalBody(jumbotron),
+                dbc.ModalBody(info_msg),
             ],
             id="intro-modal",
             size="xl",
-            is_open=True,
+            # is_open=True,
         )
 
 # slider = html.Div(
@@ -478,63 +491,77 @@ pred_summary = [
     ), 
 ]
 
-about_card = dbc.Card(
-    [
-        dbc.Row(
-            [
-                dbc.Col(
-                    dbc.CardImg(
-                        src="daniel.jpeg",
-                        # className="img-fluid rounded-start",
-                    ),
-                    className="col-md-4",
-                ),
-                dbc.Col(
-                    dbc.CardBody(
-                        [
-                            html.H4("Card title", className="card-title"),
-                            html.P(
-                                "This is a wider card with supporting text "
-                                "below as a natural lead-in to additional "
-                                "content. This content is a bit longer.",
-                                className="card-text",
-                            ),
-                            html.Small(
-                                "Last updated 3 mins ago",
-                                className="card-text text-muted",
-                            ),
-                        ]
-                    ),
-                    className="col-md-8",
-                ),
-            ],
-            className="g-0 d-flex align-items-center",
-        )
-    ],
-    className="mb-3",
-    style={"maxWidth": "540px"},
-)
-
 wordCloud = dbc.Card([html.Img(id="wordcloud")])
 
 stock_chart = html.Div([
     dcc.Graph(
         id='line-chart', 
-        style={'margin-top': '-30px', 'height': 800}
+        style={'margin-top': '-30px', 'height': 1000}
     ),
 ])
 
-stock_tabs = dcc.Tabs(
-    id='stock-tabs',
-    value='stock-chart',
-    children=[
-        dcc.Tab(label='Stock vs. Sentiment', value='stock-chart'),
-        dcc.Tab(label='Wordcloud', value='wcloud'),
-    ],
-    vertical=True, # set tabs to vertical
+title_style = {'margin-left': '20px', 'margin-top': '5px'}
+
+left_jumbotron = dbc.Col(
+    html.Div([
+        html.Div(
+            [
+                html.Img(src=transform_image('img/daniel.jpeg'),
+                         style={'width': 200, 'height': 200}),
+                html.Div([
+                    html.Br(), html.Br(),
+                    create_logo('img/linkedin.png', 'https://www.linkedin.com/in/danielosetiawan/'),
+                    create_logo('img/github.png', 'https://github.com/set-one'),                    
+                    html.H4("Daniel S.", className="display-6"),
+                    html.I('Data Science Fellow', style={'margin-top': '-200px'}),
+                ], style={'margin-left': '20px', 'line-height': 0.5}),
+            ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '20px'}),
+            html.Hr(className="my-2"),
+            html.P(
+                "I'm an alumnus of UCSB with a BS in Chemistry. "
+                "I currently work as an R&D engineer at a quantum computing startup, "
+                "where I had the opportunity to interface with various electronics (RF/DC) "
+                "and code (python, SCPI, Labview) to analyze failure rates, "
+                "improve product performance, and develop methods attuned to scalability. "
+                "This journey brought me to channel my inner passion for data science, "
+                "as there are many ways to creatively tell a story using data.",
+                style = {'margin-top': '10px'}
+            ),
+        ], className="h-100 p-5 bg-light border rounded-3",  
+    ), md=6,
 )
 
-# app.layout = html.Div([
-#                     stock_tabs,
-#                     html.Div(id='tab-content')
-#                 ])
+right_jumbotron = dbc.Col(
+    html.Div([
+        html.Div(
+            [
+                html.Img(src=transform_image('img/laurel.jpg'),
+                         style={'width': 200, 'height': 200}),
+                html.Div([
+                    html.Br(), html.Br(),
+                    create_logo('img/linkedin.png', 'https://www.linkedin.com/in/cheng-laurel-he-b04a59104/'),
+                    create_logo('img/github.png', 'https://github.com/LaurelHe1'),                    
+                    html.H4("Laurel H.", className="display-6"),
+                    html.I('Data Science Fellow', style={'margin-top': '-200px'}),
+                ], style={'margin-left': '20px', 'line-height': 0.5}),
+            ], style={'display': 'flex', 'align-items': 'center', 'margin-bottom': '20px'}),
+            html.Hr(className="my-2"),
+            html.P(
+                "My undergrad was in Geosystems Engineering and Hydrogeology at the "
+                "University of Texas, Austin. I got my Master's in Atmosphere and Energy, "
+                "Civil Engineering at Stanford. I'm passionate about nature, "
+                "environmental protection and renewable energy. I'm excited about how "
+                "machine learning and data analytics are giving us better tools to "
+                "understand and fight climate change, and I'm looking forward to kickstart "
+                "my career in this exciting field.",
+                style = {'margin-top': '10px'}
+            ),
+        ], className="h-100 p-5 bg-light border rounded-3",  
+    ), md=6,
+)
+
+
+jumbotron = dbc.Row(
+    [left_jumbotron, right_jumbotron],
+    className="align-items-md-stretch",
+)
