@@ -99,6 +99,7 @@ tab4 = dbc.Tab(label="About Project", children=[
             html.Hr(className="my-2"),
             html.P([
                 html.Div("Conventional RSI Trading Strategy:", style={"font-weight":"bold", "font-size": "20px"}), 
+                "- General condition to buy: the stock price is above its 200-day Moving Average ", html.Br(),
                 "- If 10-period RSI of the stock is below 30, buy on the next day's open ", html.Br(),
                 "- If 10-period RSI is above 40 or after 10 trading days, sell on the next day's open ", html.Br(),
                 html.Br(),
@@ -149,7 +150,7 @@ tab4 = dbc.Tab(label="About Project", children=[
 
 # change active tab when done testing
 tabs = dbc.Card(
-    dbc.Tabs([tab1, tab2, tab3, tab4])
+    dbc.Tabs([tab4, tab1, tab2, tab3])
     )
 
 ########################

@@ -176,7 +176,7 @@ def update_line_chart(company):
                               mode = 'markers', name='Buy'
                             )
     sell_trace = go.Scatter(x=pd.to_datetime(frame.loc[sell]['Date']), y = frame.loc[sell]['Adj Close'],
-                              marker=dict(symbol='triangle-up', color='lightsteelblue'), 
+                              marker=dict(symbol='triangle-down', color='lightsteelblue'), 
                               mode = 'markers', name='Sell'
                             )
     buy_trace_sent = go.Scatter(x=pd.to_datetime(data.loc[buy_sent]['Date']), y = data.loc[buy_sent]['Adj Close'],
@@ -184,7 +184,7 @@ def update_line_chart(company):
                               mode = 'markers', name='Buy_sent'
                             )
     sell_trace_sent = go.Scatter(x=pd.to_datetime(data.loc[sell_sent]['Date']), y = data.loc[sell_sent]['Adj Close'],
-                              marker=dict(symbol='triangle-up', color='red'), 
+                              marker=dict(symbol='triangle-down', color='red'), 
                               mode = 'markers', name='Sell_sent'
                             )
     # EMA12 = go.Scatter(x=frame['Date'],
