@@ -1,12 +1,9 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
-from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
-import plotly.express as px
+from dash import html, Input, Output, State, callback
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from plotly import tools
 from PIL import Image, ImageDraw, ImageFont
 from matplotlib import colors
 import colorsys
@@ -15,10 +12,9 @@ import dash_bootstrap_components as dbc
 from sentiment_prediction import checkSenti
 from globals import *
 from content import *
-from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import base64
 from io import BytesIO
-from wordcloud import WordCloud, STOPWORDS
+from wordcloud import WordCloud
 
 from statsmodels.tsa.stattools import grangercausalitytests
 
@@ -49,8 +45,6 @@ def update_line_chart(company):
         rows=5, cols=1, 
         row_heights=[4, 6, 4, 3.5, 2],
         vertical_spacing=0.05,
-        #x_title='Date',
-        #shared_xaxes=True
     )
 ######## subplot 1: sentiment ########
     # grouping colors by trace crosses
@@ -125,7 +119,7 @@ def update_line_chart(company):
        
     # subplot 2B: adding buy/sell signals
     def RSIcalc(df):
-        #df = df.copy() # or else a dreading warning sign will keep popping up
+        df = df.copy() # or else a dreading warning sign will keep popping up
         df['MA200'] = df['Adj Close'].rolling(window=200).mean()
         df['price change'] = df['Adj Close'].pct_change()
         df['Upmove'] = df['price change'].apply(lambda x: x if x>0 else 0)
@@ -187,14 +181,7 @@ def update_line_chart(company):
                               marker=dict(symbol='triangle-down', color='red'), 
                               mode = 'markers', name='Sell_sent'
                             )
-    # EMA12 = go.Scatter(x=frame['Date'],
-    #                              y=frame['EMA-12'],
-    #                              name='12-period EMA', 
-    #                              line=dict(color='dodgerblue', width=1))
-    # EMA26 = go.Scatter(x=frame['Date'],
-    #                              y=frame['EMA-26'],
-    #                              name='26-period EMA', 
-    #                              line=dict(color='darkorange', width=1))
+    
     fig.add_traces([price_trace, buy_trace, sell_trace, buy_trace_sent, sell_trace_sent], rows=2, cols=1)
 
 ######## subplot 3: MACD ########
@@ -283,7 +270,7 @@ def update_line_chart(company):
     # finding the lag coefficient value
     lag_data = data[['Date', 'sentiment avg', 'Adj Close']].groupby(['Date']).mean()
     results = grangercausalitytests(lag_data, maxlag=2, verbose=False)
-    corr, pvalue = pearsonr(data['sentiment avg'], data['Adj Close'])
+    # corr, pvalue = pearsonr(data['sentiment avg'], data['Adj Close'])
 
     granger_coefs = []
     for idx in range(2):
@@ -498,14 +485,3 @@ def final_sentpredict(n_clicks, text):
     fig = go.Figure(trace, layout)
     
     return fig
-
-
-# @callback(
-#     Output("page-content", "children"), 
-#     Input("url", "pathname")
-# )
-# def render_stocktab(tab):
-#     if tab == 'tab1':
-#         return tab1_content
-#     elif tab == 'tab2':
-#         return tab2_content

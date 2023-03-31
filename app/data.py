@@ -6,10 +6,10 @@ topics = [
     ]
 
 # cleaned_df = pd.read_csv('../data/word_cloud_df.csv', index_col=None)
-tweets_df = pd.read_csv('../data/cleaned_up_data/final_stock_tweets_summary.csv', parse_dates=['Date'])
-topics_stats = pd.read_csv('../data/cleaned_up_data/topics/final_sent_topic_stats_summary.csv', index_col='Type')
-topics_df = pd.read_csv('../data/cleaned_up_data/topics/final_sent_topic_chart_summary.csv')
-wordcloud_df = pd.read_csv('../data/cleaned_up_data/topics/final_wordcloud_summary.csv', index_col='words')
+tweets_df = pd.read_csv('../data/final_stock_tweets_summary.csv', parse_dates=['Date'])
+topics_stats = pd.read_csv('../data/final_sent_topic_stats_summary.csv', index_col='Type')
+topics_df = pd.read_csv('../data/final_sent_topic_chart_summary.csv')
+wordcloud_df = pd.read_csv('../data/final_wordcloud_summary.csv', index_col='words')
 
 tweets_df['Date'] = pd.to_datetime(tweets_df.Date.dt.date)
 

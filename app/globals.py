@@ -1,16 +1,12 @@
-from dash import Dash, dcc, html, dash_table, Input, Output, State, callback, get_asset_url
+from dash import dcc, html, dash_table
 import dash_bootstrap_components as dbc
 from data import *
-# from dash_iconify import DashIconify
-# from content import *
-from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
-import plotly.express as px
+# from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import pandas as pd
 pd.options.mode.chained_assignment = None
 from scipy.stats import pearsonr
-# import dash_icons as fas
 import base64
 from statsmodels.tsa.stattools import grangercausalitytests
 
@@ -186,8 +182,10 @@ def topic_data(topic):
     def topic_granger_causality(topic, comparison_data):
         coefs = []
 
-        # data = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean().dropna()
-        # data = data.dropna(how='all').fillna(method='ffill').dropna()
+        # data = topics_df.copy()
+        # data['Date'] = pd.to_datetime(topics_df.Date).dt.strftime('%Y-%m')
+
+        
 
         try:
             data1 = topics_df[['Date', comparison_data, f'{topic}_sentiment']].groupby(['Date']).mean().dropna()

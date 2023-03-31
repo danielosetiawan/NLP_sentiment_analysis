@@ -1,16 +1,12 @@
-import transformers
 import torch
 import math
-import pandas as pd
 import numpy as np
 import emoji
 import re
-from transformers import (
-    RobertaForSequenceClassification, RobertaTokenizer, BertForSequenceClassification, 
-    BertTokenizer, AutoModelForSequenceClassification, AutoTokenizer, AdamW
-)
+from transformers import RobertaForSequenceClassification, RobertaTokenizer, AutoTokenizer
 import random
-import time
+from huggingface_hub import notebook_login
+notebook_login()
 
 
 seed_val = 42
@@ -20,8 +16,11 @@ torch.manual_seed(seed_val)
 torch.cuda.manual_seed_all(seed_val)
 
 
-tokenizer = RobertaTokenizer.from_pretrained('zhayunduo/roberta-base-stocktwits-finetuned')
-model = RobertaForSequenceClassification.from_pretrained('zhayunduo/roberta-base-stocktwits-finetuned')
+tokenizer = AutoTokenizer.from_pretrained('laurelhe/BERTweet_StockTwits_fine_tuned')
+model = RobertaForSequenceClassification.from_pretrained('laurelhe/BERTweet_StockTwits_fine_tuned')
+
+# tokenizer = RobertaTokenizer.from_pretrained('../data/model')
+# model = RobertaForSequenceClassification.from_pretrained('../data/model')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

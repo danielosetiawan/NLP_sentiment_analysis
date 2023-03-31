@@ -1,20 +1,9 @@
-
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-
-from dash import Dash, dcc, html, dash_table, Input, Output, State, callback
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly import tools
+from dash import Dash, dcc, html, Input, Output, callback
 import dash_bootstrap_components as dbc
-from sentiment_prediction import checkSenti
 from content import *
 from globals import *
 from callbacks import *
-from dash_bootstrap_templates import ThemeChangerAIO, template_from_url
 
-PLOTLY_LOGO = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
 
 app = Dash(
     external_stylesheets=[
@@ -101,4 +90,4 @@ def render_page_content(pathname):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True, port=8999)
+    app.run_server(debug=False, port=8999)
