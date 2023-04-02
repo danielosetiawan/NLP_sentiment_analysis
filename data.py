@@ -5,10 +5,10 @@ topics = [
     'interest_rates', 'recession', 'unemployment', 'inflation'
     ]
 
-tweets_df = pd.read_csv('final_stock_tweets_summary.csv', parse_dates=['Date'])
-topics_stats = pd.read_csv('final_sent_topic_stats_summary.csv', index_col='Type')
-topics_df = pd.read_csv('final_sent_topic_chart_summary.csv')
-wordcloud_df = pd.read_csv('final_wordcloud_summary.csv', index_col='words')
+tweets_df = pd.read_csv('./data/final_stock_tweets_summary.csv', parse_dates=['Date'])
+topics_stats = pd.read_csv('./data/final_sent_topic_stats_summary.csv', index_col='Type')
+topics_df = pd.read_csv('./data/final_sent_topic_chart_summary.csv')
+wordcloud_df = pd.read_csv('./data/final_wordcloud_summary.csv', index_col='words')
 
 tweets_df['Date'] = pd.to_datetime(tweets_df.Date.dt.date)
 
