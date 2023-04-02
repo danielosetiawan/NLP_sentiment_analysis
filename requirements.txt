@@ -2,3 +2,5 @@ dash
 plotly
 gunicorn
 dash_bootstrap_components
+pandas
+numpy
