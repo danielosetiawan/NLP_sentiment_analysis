@@ -1,0 +1,15 @@
+dash
+plotly
+gunicorn
+dash_bootstrap_components
+pandas
+numpy
+torch
+transformers
+scipy
+statsmodels
+Pillow
+matplotlib
+emoji
+ipywidgets
+wordcloud
