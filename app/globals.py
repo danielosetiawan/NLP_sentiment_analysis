@@ -509,7 +509,7 @@ left_jumbotron = dbc.Col(
                 html.Div([
                     html.Br(), html.Br(),
                     create_logo('img/linkedin.png', 'https://www.linkedin.com/in/danielosetiawan/'),
-                    create_logo('img/github.png', 'https://github.com/set-one'),                    
+                    create_logo('img/github.png', 'https://github.com/danielosetiawan'),                    
                     html.H4("Daniel S.", className="display-6"),
                     html.I('Data Science Fellow', style={'margin-top': '-200px'}),
                 ], style={'margin-left': '20px', 'line-height': 0.5}),
