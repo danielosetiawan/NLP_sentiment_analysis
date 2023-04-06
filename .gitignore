@@ -8,3 +8,4 @@ balanced_untokenized_cleaned_stocktwits.csv
 __pycache__
 __pycache__
 .DS_Store
+.venv
