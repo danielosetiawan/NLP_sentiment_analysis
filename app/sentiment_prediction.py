@@ -5,8 +5,8 @@ import emoji
 import re
 from transformers import RobertaForSequenceClassification, RobertaTokenizer, AutoTokenizer
 import random
-from huggingface_hub import notebook_login
-notebook_login()
+# from huggingface_hub import notebook_login
+# notebook_login()
 
 
 seed_val = 42
@@ -19,8 +19,8 @@ torch.cuda.manual_seed_all(seed_val)
 tokenizer = AutoTokenizer.from_pretrained('laurelhe/BERTweet_StockTwits_fine_tuned')
 model = RobertaForSequenceClassification.from_pretrained('laurelhe/BERTweet_StockTwits_fine_tuned')
 
-# tokenizer = RobertaTokenizer.from_pretrained('../data/model')
-# model = RobertaForSequenceClassification.from_pretrained('../data/model')
+# tokenizer = RobertaTokenizer.from_pretrained('./model')
+# model = RobertaForSequenceClassification.from_pretrained('./model')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -74,4 +74,4 @@ def checkSenti(sent,return_logits=True):
         logits = [logit0/(logit0+logit1),logit1/(logit0+logit1)]
         return [labels[index], max(logits)]
     return labels[index]
-
+    

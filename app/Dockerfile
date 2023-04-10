@@ -1,21 +1,36 @@
+# Use the official lightweight Python image.
 FROM python:3.8
-ENV DASH_DEBUG_MODE True
 
-COPY ./data/ /data/
-COPY ./content.py /content.py
-COPY ./globals.py /globals.py
-COPY ./sentiment_prediction.py /sentiment_prediction.py
-COPY ./callbacks.py /callbacks.py
-COPY ./data.py /data.py
-COPY ./app.py /app.py
-COPY ./img /img
-COPY ./assets /assets
-COPY ./logos /logos
-COPY ./requirements.txt /requirements.txt
+# Set the working directory in the container
+ENV APP_HOME /app
+ENV PYTHONUNBUFFERED True
+WORKDIR $APP_HOME
 
-WORKDIR /
+# Install system dependencies
+RUN apt-get update && \
+    apt-get -y install gcc
 
-RUN set -ex && \
-    pip install -r requirements.txt
-EXPOSE 8080
-CMD ["python", "app.py"]
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir gunicorn
+
+# Copy application code and all assets into container
+COPY --chown=app:app . ./
+
+# Download the model
+# RUN python ./sentiment_prediction.py
+
+# Set user for container
+# RUN groupadd -r app && \
+#    useradd -r -g app app
+# USER app
+
+# Run the gunicorn web service on container startup
+CMD exec gunicorn \
+    --bind 0.0.0.0:8080 \
+  #  --log-level info \
+  #  --workers 1 \
+  #  --threads 8 \
+  #  --timeout 0 \
+  app:server
