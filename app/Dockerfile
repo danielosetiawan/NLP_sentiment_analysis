@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 COPY --chown=app:app . ./
 
 # Download the model
-# RUN python ./sentiment_prediction.py
+RUN python ./sentiment_prediction.py
 
 # Set user for container
 # RUN groupadd -r app && \
