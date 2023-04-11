@@ -9,3 +9,6 @@ __pycache__
 __pycache__
 .DS_Store
 .venv
+pytorch_model.bin
+google_CLI
+__pycache__
