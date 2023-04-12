@@ -14,7 +14,7 @@ from globals import *
 from content import *
 import base64
 from io import BytesIO
-# from wordcloud import WordCloud
+from wordcloud import WordCloud
 
 from statsmodels.tsa.stattools import grangercausalitytests
 
@@ -327,60 +327,60 @@ def update_output(n_clicks, value):
 
 
 # callback for word cloud
-# @callback(
-#     Output('wordcloud', 'src'), 
-#     Input('company', 'value')
-# )
-# def plot_wordcloud(company):
-#     if company == 'All':
-#         # change this when you're done with testing
-#         company = 'AAPL'
+@callback(
+    Output('wordcloud', 'src'), 
+    Input('company', 'value')
+)
+def plot_wordcloud(company):
+    if company == 'All':
+        # change this when you're done with testing
+        company = 'AAPL'
 
-#     text_bull = wordcloud_df[f'{company}_bull'].dropna().to_dict()
-#     text_bear = wordcloud_df[f'{company}_bear'].dropna().to_dict()
+    text_bull = wordcloud_df[f'{company}_bull'].dropna().to_dict()
+    text_bear = wordcloud_df[f'{company}_bear'].dropna().to_dict()
 
-#     # Load the two images and convert them to numpy arrays
-#     mask1 = np.array(Image.open('./logos/bull.png'))
-#     mask2 = np.array(Image.open('./logos/bear.png'))
+    # Load the two images and convert them to numpy arrays
+    mask1 = np.array(Image.open('./logos/bull.png'))
+    mask2 = np.array(Image.open('./logos/bear.png'))
 
-#     # Create the WordCloud objects with the masks
-#     wc1 = WordCloud(background_color='white', mask=mask1)
-#     wc2 = WordCloud(background_color='white', mask=mask2)
+    # Create the WordCloud objects with the masks
+    wc1 = WordCloud(background_color='white', mask=mask1)
+    wc2 = WordCloud(background_color='white', mask=mask2)
 
-#     # Generate the word clouds
-#     wc1.generate_from_frequencies(text_bull)
-#     wc2.generate_from_frequencies(text_bear)
+    # Generate the word clouds
+    wc1.generate_from_frequencies(text_bull)
+    wc2.generate_from_frequencies(text_bear)
     
-#     # defining function for color func
-#     def hsl_color_func(word, font_size, position, orientation, random_state = None, **kwargs):
-#         return(hsl_val % np.random.randint(0,100))
+    # defining function for color func
+    def hsl_color_func(word, font_size, position, orientation, random_state = None, **kwargs):
+        return(hsl_val % np.random.randint(0,100))
     
-#     # change color for bear
-#     color = 'xkcd:blood red'
-#     r,g,b = colors.to_rgb(color)
-#     h,l,s = colorsys.rgb_to_hls(r,g,b)
-#     hsl_val = 'hsl(' + str(h*360) + ', 75%%, %d%%)'
-#     color_bear = hsl_color_func
-#     wc2.recolor(color_func=color_bear)
+    # change color for bear
+    color = 'xkcd:blood red'
+    r,g,b = colors.to_rgb(color)
+    h,l,s = colorsys.rgb_to_hls(r,g,b)
+    hsl_val = 'hsl(' + str(h*360) + ', 75%%, %d%%)'
+    color_bear = hsl_color_func
+    wc2.recolor(color_func=color_bear)
 
-#     # Combine the two images side by side
-#     combined_width = mask1.shape[1] + mask2.shape[1]
-#     combined_height = max(mask1.shape[0], mask2.shape[0])
+    # Combine the two images side by side
+    combined_width = mask1.shape[1] + mask2.shape[1]
+    combined_height = max(mask1.shape[0], mask2.shape[0])
 
-#     combined_image = Image.new('RGB', (combined_width, combined_height), color='white')
-#     combined_image.paste(Image.fromarray(wc1.to_array()), (0, 100))
-#     combined_image.paste(Image.fromarray(wc2.to_array()), (mask1.shape[1], 0))
+    combined_image = Image.new('RGB', (combined_width, combined_height), color='white')
+    combined_image.paste(Image.fromarray(wc1.to_array()), (0, 100))
+    combined_image.paste(Image.fromarray(wc2.to_array()), (mask1.shape[1], 0))
     
-#     draw = ImageDraw.Draw(combined_image)
-#     font = ImageFont.truetype('Arial.ttf', size=50)
+    draw = ImageDraw.Draw(combined_image)
+    font = ImageFont.truetype('Arial.ttf', size=50)
 
-#     draw.text((700, combined_height-75), 'Bulls', fill='black', font=font)
-#     draw.text((mask1.shape[1]+750, combined_height-75), 'Bears', fill='black', font=font)
+    draw.text((700, combined_height-75), 'Bulls', fill='black', font=font)
+    draw.text((mask1.shape[1]+750, combined_height-75), 'Bears', fill='black', font=font)
 
-#     img = BytesIO()
-#     combined_image.save(img, format='PNG')
+    img = BytesIO()
+    combined_image.save(img, format='PNG')
 
-#     return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
+    return 'data:image/png;base64,{}'.format(base64.b64encode(img.getvalue()).decode())
     # return combined_image
 
 
