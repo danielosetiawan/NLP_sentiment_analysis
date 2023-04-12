@@ -388,7 +388,7 @@ dropdown = html.Div(
     [
         dcc.Dropdown(
             options=tweets_df['Stock Name'].unique(),
-            value='All',
+            value='AAPL',
             id="company",
             clearable=False,
             style={

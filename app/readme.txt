@@ -13,3 +13,11 @@ Thanks for checking out our app!
 
 - Daniel Setiawan -- www.linkedin.com/in/danielosetiawan
 - Laurel He -- www.linkedin.com/in/cheng-laurel-he-b04a59104
+
+### Internal
+To deploy to GCP:
+- GCP console >>>
+- git clone https://github.com/danielosetiawan/NLP_sentiment_analysis.git
+- docker build -f Dockerfile -t gcr.io/<project_id>/nlp-dashboard .
+- docker push gcr.io/nlp-dashboard-383105/nlp-dashboard
+- gcloud run deploy nlp-db --image=gcr.io/nlp-dashboard-383105/nlp-dashboard --platform=managed --region=us-west2 --cpu=4 --memory=16G --allow-unauthenticated
