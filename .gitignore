@@ -1,4 +1,4 @@
-.ipynb_checkpoints/
+ipynb_checkpoints/
 tweets_numericalized.csv
 large_datafiles
 tweets_cleaned_tokenized_words.csv
@@ -12,4 +12,4 @@ __pycache__
 pytorch_model.bin
 google_CLI
 __pycache__
-config.yaml
+automatic/private_config.yaml

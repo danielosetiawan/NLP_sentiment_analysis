@@ -1,0 +1,13 @@
+user_agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36
+
+# https://developer.twitter.com/
+twitter_authentication:
+  consumer_key: 
+  consumer_secret: 
+  access_token: 
+  access_token_secret: 
+
+# https://www.reddit.com/prefs/apps
+reddit_authentication:
+  client_id: 
+  client_secret: 
