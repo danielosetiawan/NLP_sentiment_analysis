@@ -1,0 +1,11 @@
+user_agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36
+
+twitter_authentication:
+  consumer_key: Ub7VWkaprwryELBbzHVQFZjGQ
+  consumer_secret: MUaW1RcSp0PcfnE9G5R2HAPPnmdF1RJrvU1hYldbgc7dd6YoFu',
+  access_token: 961189335457398784-jg4dZN59yzitahzNljTQI828ivocLzZ' 
+  access_token_secret: rjikdx4HT2I4zmW0oJMPljsBKG2SeUapY8ftavMJOIQjg
+
+reddit_authentication:
+  client_id: AWikP5WsVmsKXxbwNRZjnw
+  client_secret: EysmnHqcLDBgDkWtOJolO8uqoQpQSQ
