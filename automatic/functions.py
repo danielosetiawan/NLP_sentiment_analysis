@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import yahoo_fin.stock_info as si
 import yaml
 import praw
-import globals
+import constants as cn
 import torch
 import re
 import emoji
